@@ -1,0 +1,69 @@
+2025-09-18 02:20:31,613 - ERROR - Error al guardar listas maestras: ON CONFLICT clause does not match any PRIMARY KEY or UNIQUE constraint
+
+
+2025-09-18 02:22:56,392 - ERROR - Error al guardar listas maestras: ON CONFLICT clause does not match any PRIMARY KEY or UNIQUE constraint
+
+
+2025-09-18 02:48:02,964 - ERROR - Error al guardar listas maestras: ON CONFLICT clause does not match any PRIMARY KEY or UNIQUE constraint
+
+
+2025-09-22 14:48:09,954 - ERROR - Error al guardar listas maestras: ON CONFLICT clause does not match any PRIMARY KEY or UNIQUE constraint
+
+
+2025-09-22 14:57:41,773 - ERROR - Error al guardar listas maestras: ON CONFLICT clause does not match any PRIMARY KEY or UNIQUE constraint
+
+
+2025-09-22 16:06:41,134 - ERROR - Error al guardar listas maestras: ON CONFLICT clause does not match any PRIMARY KEY or UNIQUE constraint
+
+
+2025-09-22 16:10:26,399 - ERROR - Error al guardar listas maestras: ON CONFLICT clause does not match any PRIMARY KEY or UNIQUE constraint
+
+
+2025-09-22 16:14:21,488 - ERROR - Error al guardar listas maestras: ON CONFLICT clause does not match any PRIMARY KEY or UNIQUE constraint
+
+
+2025-09-23 19:54:41,750 - ERROR - Error al guardar listas maestras: ON CONFLICT clause does not match any PRIMARY KEY or UNIQUE constraint
+
+
+2025-09-23 19:56:14,506 - ERROR - Error al guardar listas maestras: ON CONFLICT clause does not match any PRIMARY KEY or UNIQUE constraint
+
+
+2025-09-24 17:16:13,428 - ERROR - Error al guardar listas maestras: no such table: main.documentos_maestros_old
+
+
+2025-09-24 17:36:13,280 - ERROR - Error al guardar listas maestras: no such table: main.documentos_maestros_old
+
+
+2025-09-24 17:36:18,137 - ERROR - Error al guardar listas maestras: no such table: main.documentos_maestros_old
+
+
+2025-09-24 17:36:28,049 - ERROR - Error al guardar listas maestras: no such table: main.documentos_maestros_old
+
+
+2025-09-24 18:06:02,607 - ERROR - Error al guardar listas maestras: no such table: main.documentos_maestros_old
+
+
+2025-09-24 18:17:15,141 - ERROR - Error al guardar listas maestras: no such table: main.documentos_maestros_old
+
+
+2025-09-24 18:53:37,028 - ERROR - Error al guardar listas maestras: no such table: main.documentos_maestros_old
+
+
+2025-09-24 19:03:13,789 - ERROR - Error al guardar listas maestras: no such table: main.documentos_maestros_old
+
+
+2025-09-24 19:15:45,879 - ERROR - Error al guardar listas maestras: no such table: main.documentos_maestros_old
+
+
+2025-09-24 19:26:38,162 - ERROR - Error al guardar listas maestras: no such table: main.documentos_maestros_old
+
+
+2025-09-24 19:30:25,029 - ERROR - Error al guardar listas maestras: no such table: main.documentos_maestros_old
+
+
+2025-09-24 19:38:24,373 - ERROR - Error al guardar listas maestras: DatabaseManager._save_master_table() got an unexpected keyword argument 'data_list'
+
+
+2025-09-24 19:41:41,554 - ERROR - Error al guardar listas maestras: DatabaseManager._save_master_table() got an unexpected keyword argument 'data_list'
+
+

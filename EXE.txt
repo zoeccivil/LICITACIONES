@@ -1,0 +1,1 @@
+py -m PyInstaller --name "gestor_licitaciones_db" --onefile --windowed --clean --add-data "c:\Users\servi\AppData\Local\Programs\Python\Python313\Lib\site-packages\sv_ttk;sv_ttk" --add-data "c:\Users\servi\AppData\Local\Programs\Python\Python313\Lib\site-packages\tkcalendar;tkcalendar" --hidden-import "babel.numbers" glicitaciones.py

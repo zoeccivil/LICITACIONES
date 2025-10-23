@@ -1,0 +1,4886 @@
+{
+  "db_path": "D:\\Dropbox\\PROGAIN\\GESTOR LICITACIONES PyQt6\\LICITACIONES_GENERALES.db",
+  "sqlite_version": "3.49.1",
+  "schema": {
+    "tables": [
+      {
+        "name": "backups_log",
+        "sql": "CREATE TABLE backups_log (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                timestamp TEXT NOT NULL,\n                ruta_archivo TEXT NOT NULL,\n                comentario TEXT\n            )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "timestamp",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "ruta_archivo",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "comentario",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "timestamp",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "ruta_archivo",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "comentario",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [],
+        "triggers": []
+      },
+      {
+        "name": "bnb_evaluaciones",
+        "sql": "CREATE TABLE bnb_evaluaciones (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                licitacion_id INTEGER,\n                criterio_id INTEGER,\n                puntaje INTEGER NOT NULL CHECK (puntaje >= 0 AND puntaje <= 10),\n                FOREIGN KEY (licitacion_id) REFERENCES licitaciones (id) ON DELETE CASCADE,\n                FOREIGN KEY (criterio_id) REFERENCES criterios_bnb (id) ON DELETE CASCADE,\n                UNIQUE(licitacion_id, criterio_id)\n            )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "criterio_id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "puntaje",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "criterio_id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "puntaje",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "table": "criterios_bnb",
+            "from": "criterio_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "table": "licitaciones",
+            "from": "licitacion_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          }
+        ],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_bnb_evaluaciones_1",
+            "unique": 1,
+            "origin": "u",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 1,
+                "name": "licitacion_id"
+              },
+              {
+                "seqno": 1,
+                "cid": 2,
+                "name": "criterio_id"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "categorias",
+        "sql": "CREATE TABLE categorias(id INTEGER PRIMARY KEY,nombre TEXT NOT NULL UNIQUE)",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_categorias_1",
+            "unique": 1,
+            "origin": "u",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 1,
+                "name": "nombre"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "competidores_maestros",
+        "sql": "CREATE TABLE competidores_maestros (nombre TEXT PRIMARY KEY, rnc TEXT, rpe TEXT, representante TEXT, total_participaciones INTEGER DEFAULT 0, total_ganadas INTEGER DEFAULT 0, ultima_adjudicacion TEXT)",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "rnc",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "rpe",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "representante",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 4,
+            "name": "total_participaciones",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": "0",
+            "pk": 0
+          },
+          {
+            "cid": 5,
+            "name": "total_ganadas",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": "0",
+            "pk": 0
+          },
+          {
+            "cid": 6,
+            "name": "ultima_adjudicacion",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "rnc",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "rpe",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "representante",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 4,
+            "name": "total_participaciones",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": "0",
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 5,
+            "name": "total_ganadas",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": "0",
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 6,
+            "name": "ultima_adjudicacion",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_competidores_maestros_1",
+            "unique": 1,
+            "origin": "pk",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 0,
+                "name": "nombre"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "config_app",
+        "sql": "CREATE TABLE config_app (\n                clave TEXT PRIMARY KEY,\n                valor TEXT\n            )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "clave",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "valor",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "clave",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "valor",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_config_app_1",
+            "unique": 1,
+            "origin": "pk",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 0,
+                "name": "clave"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "criterios_bnb",
+        "sql": "CREATE TABLE criterios_bnb (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                nombre TEXT UNIQUE NOT NULL,\n                peso REAL NOT NULL CHECK (peso > 0 AND peso <= 1),\n                activo BOOLEAN DEFAULT 1\n            )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "peso",
+            "type": "REAL",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "activo",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": "1",
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "peso",
+            "type": "REAL",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "activo",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": "1",
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_criterios_bnb_1",
+            "unique": 1,
+            "origin": "u",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 1,
+                "name": "nombre"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "cuentas",
+        "sql": "CREATE TABLE cuentas(id INTEGER PRIMARY KEY,nombre TEXT NOT NULL UNIQUE)",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_cuentas_1",
+            "unique": 1,
+            "origin": "u",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 1,
+                "name": "nombre"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "descalificaciones_fase_a",
+        "sql": "CREATE TABLE descalificaciones_fase_a (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                licitacion_id INTEGER NOT NULL,\n                participante_nombre TEXT NOT NULL,\n                documento_id INTEGER NOT NULL,\n                comentario TEXT,\n                es_nuestro BOOLEAN NOT NULL,\n                FOREIGN KEY (licitacion_id) REFERENCES licitaciones (id) ON DELETE CASCADE,\n                FOREIGN KEY (documento_id) REFERENCES documentos (id) ON DELETE CASCADE\n            )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "participante_nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "documento_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 4,
+            "name": "comentario",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 5,
+            "name": "es_nuestro",
+            "type": "BOOLEAN",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "participante_nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "documento_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 4,
+            "name": "comentario",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 5,
+            "name": "es_nuestro",
+            "type": "BOOLEAN",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "table": "documentos",
+            "from": "documento_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "table": "licitaciones",
+            "from": "licitacion_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          }
+        ],
+        "indexes": [],
+        "triggers": []
+      },
+      {
+        "name": "documentos",
+        "sql": "CREATE TABLE documentos (\n                id INTEGER PRIMARY KEY AUTOINCREMENT, licitacion_id INTEGER, codigo TEXT, nombre TEXT,\n                categoria TEXT, comentario TEXT, presentado BOOLEAN, subsanable TEXT, ruta_archivo TEXT, \n                responsable TEXT, revisado BOOLEAN DEFAULT 0, obligatorio BOOLEAN DEFAULT 0, orden_pliego INTEGER, requiere_subsanacion BOOLEAN DEFAULT 0,\n                FOREIGN KEY (licitacion_id) REFERENCES licitaciones (id) ON DELETE CASCADE\n            )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "codigo",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 4,
+            "name": "categoria",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 5,
+            "name": "comentario",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 6,
+            "name": "presentado",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 7,
+            "name": "subsanable",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 8,
+            "name": "ruta_archivo",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 9,
+            "name": "responsable",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 10,
+            "name": "revisado",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": "0",
+            "pk": 0
+          },
+          {
+            "cid": 11,
+            "name": "obligatorio",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": "0",
+            "pk": 0
+          },
+          {
+            "cid": 12,
+            "name": "orden_pliego",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 13,
+            "name": "requiere_subsanacion",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": "0",
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "codigo",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 4,
+            "name": "categoria",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 5,
+            "name": "comentario",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 6,
+            "name": "presentado",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 7,
+            "name": "subsanable",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 8,
+            "name": "ruta_archivo",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 9,
+            "name": "responsable",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 10,
+            "name": "revisado",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": "0",
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 11,
+            "name": "obligatorio",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": "0",
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 12,
+            "name": "orden_pliego",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 13,
+            "name": "requiere_subsanacion",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": "0",
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "table": "licitaciones",
+            "from": "licitacion_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          }
+        ],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "idx_documentos_licitacion_id",
+            "unique": 0,
+            "origin": "c",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 1,
+                "name": "licitacion_id"
+              }
+            ]
+          },
+          {
+            "seq": 1,
+            "name": "idx_documentos_licitacion_orden",
+            "unique": 0,
+            "origin": "c",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 1,
+                "name": "licitacion_id"
+              },
+              {
+                "seqno": 1,
+                "cid": 12,
+                "name": "orden_pliego"
+              }
+            ]
+          }
+        ],
+        "triggers": [
+          {
+            "name": "documentos_after_delete",
+            "sql": "CREATE TRIGGER documentos_after_delete AFTER DELETE ON documentos BEGIN\n                DELETE FROM fts_documentos WHERE rowid = old.id;\n            END"
+          },
+          {
+            "name": "documentos_after_insert",
+            "sql": "CREATE TRIGGER documentos_after_insert AFTER INSERT ON documentos BEGIN\n                INSERT OR IGNORE INTO fts_documentos(rowid, codigo, nombre, comentario)\n                VALUES (new.id, new.codigo, new.nombre, COALESCE(new.comentario, ''));\n            END"
+          },
+          {
+            "name": "documentos_after_update",
+            "sql": "CREATE TRIGGER documentos_after_update AFTER UPDATE ON documentos BEGIN\n                INSERT OR REPLACE INTO fts_documentos(rowid, codigo, nombre, comentario)\n                VALUES (new.id, new.codigo, new.nombre, COALESCE(new.comentario, ''));\n            END"
+          }
+        ]
+      },
+      {
+        "name": "documentos_maestros",
+        "sql": "CREATE TABLE documentos_maestros (\n                        id INTEGER PRIMARY KEY AUTOINCREMENT,\n                        codigo TEXT UNIQUE NOT NULL,\n                        nombre TEXT,\n                        categoria TEXT,\n                        comentario TEXT,\n                        ruta_archivo TEXT\n                    )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "codigo",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "categoria",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 4,
+            "name": "comentario",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 5,
+            "name": "ruta_archivo",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "codigo",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "categoria",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 4,
+            "name": "comentario",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 5,
+            "name": "ruta_archivo",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_documentos_maestros_1",
+            "unique": 1,
+            "origin": "u",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 1,
+                "name": "codigo"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "empresas_maestras",
+        "sql": "CREATE TABLE empresas_maestras (nombre TEXT PRIMARY KEY, rnc TEXT, telefono TEXT, correo TEXT, direccion TEXT, rpe TEXT, representante TEXT, cargo_representante TEXT)",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "rnc",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "telefono",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "correo",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 4,
+            "name": "direccion",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 5,
+            "name": "rpe",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 6,
+            "name": "representante",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 7,
+            "name": "cargo_representante",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "rnc",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "telefono",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "correo",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 4,
+            "name": "direccion",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 5,
+            "name": "rpe",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 6,
+            "name": "representante",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 7,
+            "name": "cargo_representante",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_empresas_maestras_1",
+            "unique": 1,
+            "origin": "pk",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 0,
+                "name": "nombre"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "expediente_items",
+        "sql": "CREATE TABLE expediente_items (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                expediente_id INTEGER NOT NULL,\n                orden INTEGER NOT NULL,\n                doc_version_id INTEGER NOT NULL,\n                titulo TEXT NOT NULL,\n                FOREIGN KEY (expediente_id) REFERENCES expedientes(id) ON DELETE CASCADE,\n                FOREIGN KEY (doc_version_id) REFERENCES documentos(id) ON DELETE CASCADE\n            )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "expediente_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "orden",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "doc_version_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 4,
+            "name": "titulo",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "expediente_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "orden",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "doc_version_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 4,
+            "name": "titulo",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "table": "documentos",
+            "from": "doc_version_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "table": "expedientes",
+            "from": "expediente_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          }
+        ],
+        "indexes": [],
+        "triggers": []
+      },
+      {
+        "name": "expedientes",
+        "sql": "CREATE TABLE expedientes (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                licitacion_id INTEGER NOT NULL,\n                titulo TEXT NOT NULL,\n                creado_en TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%f','now')),\n                creado_por TEXT,\n                FOREIGN KEY (licitacion_id) REFERENCES licitaciones(id) ON DELETE CASCADE\n            )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "titulo",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "creado_en",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": "strftime('%Y-%m-%d %H:%M:%f','now')",
+            "pk": 0
+          },
+          {
+            "cid": 4,
+            "name": "creado_por",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "titulo",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "creado_en",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": "strftime('%Y-%m-%d %H:%M:%f','now')",
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 4,
+            "name": "creado_por",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "table": "licitaciones",
+            "from": "licitacion_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          }
+        ],
+        "indexes": [],
+        "triggers": []
+      },
+      {
+        "name": "fts_documentos",
+        "sql": "CREATE VIRTUAL TABLE fts_documentos USING fts5(\n                codigo,\n                nombre,\n                comentario,\n                content='documentos',\n                content_rowid='id'\n            )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "codigo",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 1,
+            "name": "nombre",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "comentario",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "codigo",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "nombre",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "comentario",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "fts_documentos",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 1
+          },
+          {
+            "cid": 4,
+            "name": "rank",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 1
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [],
+        "triggers": []
+      },
+      {
+        "name": "fts_documentos_config",
+        "sql": "CREATE TABLE 'fts_documentos_config'(k PRIMARY KEY, v) WITHOUT ROWID",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "k",
+            "type": "",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "v",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "k",
+            "type": "",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "v",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_fts_documentos_config_1",
+            "unique": 1,
+            "origin": "pk",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 0,
+                "name": "k"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "fts_documentos_data",
+        "sql": "CREATE TABLE 'fts_documentos_data'(id INTEGER PRIMARY KEY, block BLOB)",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "block",
+            "type": "BLOB",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "block",
+            "type": "BLOB",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [],
+        "triggers": []
+      },
+      {
+        "name": "fts_documentos_docsize",
+        "sql": "CREATE TABLE 'fts_documentos_docsize'(id INTEGER PRIMARY KEY, sz BLOB)",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "sz",
+            "type": "BLOB",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "sz",
+            "type": "BLOB",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [],
+        "triggers": []
+      },
+      {
+        "name": "fts_documentos_idx",
+        "sql": "CREATE TABLE 'fts_documentos_idx'(segid, term, pgno, PRIMARY KEY(segid, term)) WITHOUT ROWID",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "segid",
+            "type": "",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "term",
+            "type": "",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 2
+          },
+          {
+            "cid": 2,
+            "name": "pgno",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "segid",
+            "type": "",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "term",
+            "type": "",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 2,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "pgno",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_fts_documentos_idx_1",
+            "unique": 1,
+            "origin": "pk",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 0,
+                "name": "segid"
+              },
+              {
+                "seqno": 1,
+                "cid": 1,
+                "name": "term"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "fts_licitaciones",
+        "sql": "CREATE VIRTUAL TABLE fts_licitaciones USING fts5(\n                numero_proceso,\n                nombre_proceso,\n                institucion,\n                motivo_descalificacion,\n                content='licitaciones',\n                content_rowid='id'\n            )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "numero_proceso",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 1,
+            "name": "nombre_proceso",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "institucion",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "motivo_descalificacion",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "numero_proceso",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "nombre_proceso",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "institucion",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "motivo_descalificacion",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 4,
+            "name": "fts_licitaciones",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 1
+          },
+          {
+            "cid": 5,
+            "name": "rank",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 1
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [],
+        "triggers": []
+      },
+      {
+        "name": "fts_licitaciones_config",
+        "sql": "CREATE TABLE 'fts_licitaciones_config'(k PRIMARY KEY, v) WITHOUT ROWID",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "k",
+            "type": "",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "v",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "k",
+            "type": "",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "v",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_fts_licitaciones_config_1",
+            "unique": 1,
+            "origin": "pk",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 0,
+                "name": "k"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "fts_licitaciones_data",
+        "sql": "CREATE TABLE 'fts_licitaciones_data'(id INTEGER PRIMARY KEY, block BLOB)",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "block",
+            "type": "BLOB",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "block",
+            "type": "BLOB",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [],
+        "triggers": []
+      },
+      {
+        "name": "fts_licitaciones_docsize",
+        "sql": "CREATE TABLE 'fts_licitaciones_docsize'(id INTEGER PRIMARY KEY, sz BLOB)",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "sz",
+            "type": "BLOB",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "sz",
+            "type": "BLOB",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [],
+        "triggers": []
+      },
+      {
+        "name": "fts_licitaciones_idx",
+        "sql": "CREATE TABLE 'fts_licitaciones_idx'(segid, term, pgno, PRIMARY KEY(segid, term)) WITHOUT ROWID",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "segid",
+            "type": "",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "term",
+            "type": "",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 2
+          },
+          {
+            "cid": 2,
+            "name": "pgno",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "segid",
+            "type": "",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "term",
+            "type": "",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 2,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "pgno",
+            "type": "",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_fts_licitaciones_idx_1",
+            "unique": 1,
+            "origin": "pk",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 0,
+                "name": "segid"
+              },
+              {
+                "seqno": 1,
+                "cid": 1,
+                "name": "term"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "ganadores_canonicos",
+        "sql": "CREATE TABLE ganadores_canonicos (\n        numero_proceso TEXT NOT NULL,\n        lote_numero    TEXT NOT NULL,\n        ganador_nombre TEXT NOT NULL,\n        updated_at     TEXT NOT NULL DEFAULT (datetime('now')),\n        PRIMARY KEY (numero_proceso, lote_numero)\n        )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "numero_proceso",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "lote_numero",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 2
+          },
+          {
+            "cid": 2,
+            "name": "ganador_nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "updated_at",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": "datetime('now')",
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "numero_proceso",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "lote_numero",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 2,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "ganador_nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "updated_at",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": "datetime('now')",
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "idx_gcanonico_numproc",
+            "unique": 0,
+            "origin": "c",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 0,
+                "name": "numero_proceso"
+              }
+            ]
+          },
+          {
+            "seq": 1,
+            "name": "sqlite_autoindex_ganadores_canonicos_1",
+            "unique": 1,
+            "origin": "pk",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 0,
+                "name": "numero_proceso"
+              },
+              {
+                "seqno": 1,
+                "cid": 1,
+                "name": "lote_numero"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "historial_ganadores",
+        "sql": "CREATE TABLE historial_ganadores (\n                    id INTEGER PRIMARY KEY AUTOINCREMENT,\n                    licitacion_id INTEGER NOT NULL,\n                    lote_numero TEXT NOT NULL,\n                    oferente_nombre TEXT NOT NULL,\n                    fecha TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%f','now')),\n                    FOREIGN KEY (licitacion_id) REFERENCES licitaciones(id) ON DELETE CASCADE\n                )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "lote_numero",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "oferente_nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 4,
+            "name": "fecha",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": "strftime('%Y-%m-%d %H:%M:%f','now')",
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "lote_numero",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "oferente_nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 4,
+            "name": "fecha",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": "strftime('%Y-%m-%d %H:%M:%f','now')",
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "table": "licitaciones",
+            "from": "licitacion_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          }
+        ],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "idx_hist_ganadores_oferente",
+            "unique": 0,
+            "origin": "c",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 3,
+                "name": "oferente_nombre"
+              }
+            ]
+          },
+          {
+            "seq": 1,
+            "name": "idx_hist_ganadores_licitacion",
+            "unique": 0,
+            "origin": "c",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 1,
+                "name": "licitacion_id"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "instituciones_maestras",
+        "sql": "CREATE TABLE instituciones_maestras (nombre TEXT PRIMARY KEY, rnc TEXT, telefono TEXT, correo TEXT, direccion TEXT)",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "rnc",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "telefono",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "correo",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 4,
+            "name": "direccion",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "rnc",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "telefono",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "correo",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 4,
+            "name": "direccion",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_instituciones_maestras_1",
+            "unique": 1,
+            "origin": "pk",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 0,
+                "name": "nombre"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "kit_items",
+        "sql": "CREATE TABLE kit_items (\n                kit_id INTEGER,\n                documento_maestro_id INTEGER,\n                PRIMARY KEY (kit_id, documento_maestro_id),\n                FOREIGN KEY (kit_id) REFERENCES kits_de_requisitos (id) ON DELETE CASCADE,\n                FOREIGN KEY (documento_maestro_id) REFERENCES \"documentos_maestros_old\" (id) ON DELETE CASCADE\n            )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "kit_id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "documento_maestro_id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 2
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "kit_id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "documento_maestro_id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 2,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "table": "documentos_maestros_old",
+            "from": "documento_maestro_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "table": "kits_de_requisitos",
+            "from": "kit_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          }
+        ],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_kit_items_1",
+            "unique": 1,
+            "origin": "pk",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 0,
+                "name": "kit_id"
+              },
+              {
+                "seqno": 1,
+                "cid": 1,
+                "name": "documento_maestro_id"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "kits_de_requisitos",
+        "sql": "CREATE TABLE kits_de_requisitos (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                nombre_kit TEXT NOT NULL,\n                institucion_nombre TEXT NOT NULL,\n                UNIQUE(nombre_kit, institucion_nombre),\n                FOREIGN KEY (institucion_nombre) REFERENCES instituciones_maestras (nombre) ON DELETE CASCADE\n            )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "nombre_kit",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "institucion_nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "nombre_kit",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "institucion_nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "table": "instituciones_maestras",
+            "from": "institucion_nombre",
+            "to": "nombre",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          }
+        ],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_kits_de_requisitos_1",
+            "unique": 1,
+            "origin": "u",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 1,
+                "name": "nombre_kit"
+              },
+              {
+                "seqno": 1,
+                "cid": 2,
+                "name": "institucion_nombre"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "licitacion_empresas_nuestras",
+        "sql": "CREATE TABLE licitacion_empresas_nuestras (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                licitacion_id INTEGER NOT NULL,\n                empresa_nombre TEXT NOT NULL,\n                UNIQUE(licitacion_id, empresa_nombre),\n                FOREIGN KEY (licitacion_id) REFERENCES licitaciones(id) ON DELETE CASCADE,\n                FOREIGN KEY (empresa_nombre) REFERENCES empresas_maestras(nombre) ON DELETE CASCADE\n            )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "empresa_nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "empresa_nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "table": "empresas_maestras",
+            "from": "empresa_nombre",
+            "to": "nombre",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "table": "licitaciones",
+            "from": "licitacion_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          }
+        ],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_licitacion_empresas_nuestras_1",
+            "unique": 1,
+            "origin": "u",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 1,
+                "name": "licitacion_id"
+              },
+              {
+                "seqno": 1,
+                "cid": 2,
+                "name": "empresa_nombre"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "licitacion_ganadores_lote",
+        "sql": "CREATE TABLE licitacion_ganadores_lote (\n                licitacion_id   INTEGER NOT NULL,\n                lote_numero     TEXT    NOT NULL,\n                ganador_nombre  TEXT    NOT NULL,\n                es_nuestro      INTEGER NOT NULL DEFAULT 0, empresa_nuestra TEXT,\n                PRIMARY KEY (licitacion_id, lote_numero),\n                FOREIGN KEY (licitacion_id) REFERENCES licitaciones (id) ON DELETE CASCADE\n            )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "lote_numero",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 2
+          },
+          {
+            "cid": 2,
+            "name": "ganador_nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "es_nuestro",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": "0",
+            "pk": 0
+          },
+          {
+            "cid": 4,
+            "name": "empresa_nuestra",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "lote_numero",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 2,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "ganador_nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "es_nuestro",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": "0",
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 4,
+            "name": "empresa_nuestra",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "table": "licitaciones",
+            "from": "licitacion_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          }
+        ],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "uniq_ganador_por_lote",
+            "unique": 1,
+            "origin": "c",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 0,
+                "name": "licitacion_id"
+              },
+              {
+                "seqno": 1,
+                "cid": 1,
+                "name": "lote_numero"
+              }
+            ]
+          },
+          {
+            "seq": 1,
+            "name": "idx_ganadores_nombre",
+            "unique": 0,
+            "origin": "c",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 2,
+                "name": "ganador_nombre"
+              }
+            ]
+          },
+          {
+            "seq": 2,
+            "name": "idx_ganadores_licitacion",
+            "unique": 0,
+            "origin": "c",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 0,
+                "name": "licitacion_id"
+              }
+            ]
+          },
+          {
+            "seq": 3,
+            "name": "sqlite_autoindex_licitacion_ganadores_lote_1",
+            "unique": 1,
+            "origin": "pk",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 0,
+                "name": "licitacion_id"
+              },
+              {
+                "seqno": 1,
+                "cid": 1,
+                "name": "lote_numero"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "licitaciones",
+        "sql": "CREATE TABLE licitaciones (\n                id INTEGER PRIMARY KEY AUTOINCREMENT, nombre_proceso TEXT NOT NULL, numero_proceso TEXT UNIQUE NOT NULL,\n                institucion TEXT, empresa_nuestra TEXT, estado TEXT, fase_A_superada BOOLEAN, fase_B_superada BOOLEAN,\n                adjudicada BOOLEAN, adjudicada_a TEXT, motivo_descalificacion TEXT, fecha_creacion TEXT,\n                cronograma TEXT, docs_completos_manual BOOLEAN DEFAULT 0\n            , bnb_score REAL DEFAULT -1.0, last_modified TEXT, parametros_evaluacion TEXT)",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "nombre_proceso",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "numero_proceso",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "institucion",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 4,
+            "name": "empresa_nuestra",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 5,
+            "name": "estado",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 6,
+            "name": "fase_A_superada",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 7,
+            "name": "fase_B_superada",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 8,
+            "name": "adjudicada",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 9,
+            "name": "adjudicada_a",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 10,
+            "name": "motivo_descalificacion",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 11,
+            "name": "fecha_creacion",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 12,
+            "name": "cronograma",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 13,
+            "name": "docs_completos_manual",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": "0",
+            "pk": 0
+          },
+          {
+            "cid": 14,
+            "name": "bnb_score",
+            "type": "REAL",
+            "notnull": 0,
+            "dflt_value": "-1.0",
+            "pk": 0
+          },
+          {
+            "cid": 15,
+            "name": "last_modified",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 16,
+            "name": "parametros_evaluacion",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "nombre_proceso",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "numero_proceso",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "institucion",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 4,
+            "name": "empresa_nuestra",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 5,
+            "name": "estado",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 6,
+            "name": "fase_A_superada",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 7,
+            "name": "fase_B_superada",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 8,
+            "name": "adjudicada",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 9,
+            "name": "adjudicada_a",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 10,
+            "name": "motivo_descalificacion",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 11,
+            "name": "fecha_creacion",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 12,
+            "name": "cronograma",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 13,
+            "name": "docs_completos_manual",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": "0",
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 14,
+            "name": "bnb_score",
+            "type": "REAL",
+            "notnull": 0,
+            "dflt_value": "-1.0",
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 15,
+            "name": "last_modified",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 16,
+            "name": "parametros_evaluacion",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_licitaciones_1",
+            "unique": 1,
+            "origin": "u",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 2,
+                "name": "numero_proceso"
+              }
+            ]
+          }
+        ],
+        "triggers": [
+          {
+            "name": "licitaciones_after_delete",
+            "sql": "CREATE TRIGGER licitaciones_after_delete AFTER DELETE ON licitaciones BEGIN\n                DELETE FROM fts_licitaciones WHERE rowid = old.id;\n            END"
+          },
+          {
+            "name": "licitaciones_after_insert",
+            "sql": "CREATE TRIGGER licitaciones_after_insert AFTER INSERT ON licitaciones BEGIN\n                INSERT OR IGNORE INTO fts_licitaciones(rowid, numero_proceso, nombre_proceso, institucion, motivo_descalificacion)\n                VALUES (new.id, new.numero_proceso, new.nombre_proceso, new.institucion, new.motivo_descalificacion);\n            END"
+          },
+          {
+            "name": "licitaciones_after_update",
+            "sql": "CREATE TRIGGER licitaciones_after_update AFTER UPDATE ON licitaciones BEGIN\n                INSERT OR REPLACE INTO fts_licitaciones(rowid, numero_proceso, nombre_proceso, institucion, motivo_descalificacion)\n                VALUES (new.id, new.numero_proceso, new.nombre_proceso, new.institucion, new.motivo_descalificacion);\n            END"
+          }
+        ]
+      },
+      {
+        "name": "lotes",
+        "sql": "CREATE TABLE lotes (\n                id INTEGER PRIMARY KEY AUTOINCREMENT, licitacion_id INTEGER, numero TEXT, nombre TEXT,\n                monto_base REAL, monto_base_personal REAL, monto_ofertado REAL, \n                participamos BOOLEAN, fase_A_superada BOOLEAN, ganador_oferente TEXT, empresa_nuestra TEXT,\n                FOREIGN KEY (licitacion_id) REFERENCES licitaciones (id) ON DELETE CASCADE\n            )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "numero",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 4,
+            "name": "monto_base",
+            "type": "REAL",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 5,
+            "name": "monto_base_personal",
+            "type": "REAL",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 6,
+            "name": "monto_ofertado",
+            "type": "REAL",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 7,
+            "name": "participamos",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 8,
+            "name": "fase_A_superada",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 9,
+            "name": "ganador_oferente",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 10,
+            "name": "empresa_nuestra",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "numero",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 4,
+            "name": "monto_base",
+            "type": "REAL",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 5,
+            "name": "monto_base_personal",
+            "type": "REAL",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 6,
+            "name": "monto_ofertado",
+            "type": "REAL",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 7,
+            "name": "participamos",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 8,
+            "name": "fase_A_superada",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 9,
+            "name": "ganador_oferente",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 10,
+            "name": "empresa_nuestra",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "table": "licitaciones",
+            "from": "licitacion_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          }
+        ],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "idx_lotes_licitacion_id",
+            "unique": 0,
+            "origin": "c",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 1,
+                "name": "licitacion_id"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "oferentes",
+        "sql": "CREATE TABLE oferentes (\n                id INTEGER PRIMARY KEY AUTOINCREMENT, licitacion_id INTEGER, nombre TEXT, comentario TEXT,\n                FOREIGN KEY (licitacion_id) REFERENCES licitaciones (id) ON DELETE CASCADE\n            )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "comentario",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "comentario",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "table": "licitaciones",
+            "from": "licitacion_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          }
+        ],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "idx_oferentes_licitacion_id",
+            "unique": 0,
+            "origin": "c",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 1,
+                "name": "licitacion_id"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "ofertas_lote_oferentes",
+        "sql": "CREATE TABLE ofertas_lote_oferentes (\n                id INTEGER PRIMARY KEY AUTOINCREMENT, oferente_id INTEGER, lote_numero TEXT,\n                monto REAL, paso_fase_A BOOLEAN, plazo_entrega INTEGER DEFAULT 0, garantia_meses INTEGER DEFAULT 0,\n                FOREIGN KEY (oferente_id) REFERENCES oferentes(id) ON DELETE CASCADE\n            )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "oferente_id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "lote_numero",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "monto",
+            "type": "REAL",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 4,
+            "name": "paso_fase_A",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 5,
+            "name": "plazo_entrega",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": "0",
+            "pk": 0
+          },
+          {
+            "cid": 6,
+            "name": "garantia_meses",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": "0",
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "oferente_id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "lote_numero",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "monto",
+            "type": "REAL",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 4,
+            "name": "paso_fase_A",
+            "type": "BOOLEAN",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 5,
+            "name": "plazo_entrega",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": "0",
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 6,
+            "name": "garantia_meses",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": "0",
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "table": "oferentes",
+            "from": "oferente_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          }
+        ],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "idx_ofertas_oferente_id",
+            "unique": 0,
+            "origin": "c",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 1,
+                "name": "oferente_id"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "presupuestos",
+        "sql": "CREATE TABLE presupuestos(id INTEGER PRIMARY KEY,proyecto_id INTEGER NOT NULL,subcategoria_id INTEGER NOT NULL,monto REAL NOT NULL,FOREIGN KEY(proyecto_id)REFERENCES proyectos(id)ON DELETE CASCADE,FOREIGN KEY(subcategoria_id)REFERENCES subcategorias(id)ON DELETE CASCADE,UNIQUE(proyecto_id,subcategoria_id))",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "proyecto_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "subcategoria_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "monto",
+            "type": "REAL",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "proyecto_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "subcategoria_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "monto",
+            "type": "REAL",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "table": "subcategorias",
+            "from": "subcategoria_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "table": "proyectos",
+            "from": "proyecto_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          }
+        ],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_presupuestos_1",
+            "unique": 1,
+            "origin": "u",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 1,
+                "name": "proyecto_id"
+              },
+              {
+                "seqno": 1,
+                "cid": 2,
+                "name": "subcategoria_id"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "proyecto_cuentas",
+        "sql": "CREATE TABLE proyecto_cuentas(proyecto_id INTEGER NOT NULL, cuenta_id INTEGER NOT NULL, is_principal INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(proyecto_id, cuenta_id), FOREIGN KEY(proyecto_id) REFERENCES proyectos(id) ON DELETE CASCADE, FOREIGN KEY(cuenta_id) REFERENCES cuentas(id) ON DELETE CASCADE)",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "proyecto_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "cuenta_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 2
+          },
+          {
+            "cid": 2,
+            "name": "is_principal",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": "0",
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "proyecto_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "cuenta_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 2,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "is_principal",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": "0",
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "table": "cuentas",
+            "from": "cuenta_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "table": "proyectos",
+            "from": "proyecto_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          }
+        ],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_proyecto_cuentas_1",
+            "unique": 1,
+            "origin": "pk",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 0,
+                "name": "proyecto_id"
+              },
+              {
+                "seqno": 1,
+                "cid": 1,
+                "name": "cuenta_id"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "proyectos",
+        "sql": "CREATE TABLE proyectos(id INTEGER PRIMARY KEY,nombre TEXT NOT NULL UNIQUE,moneda TEXT NOT NULL,cuenta_principal TEXT)",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "moneda",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "cuenta_principal",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "moneda",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "cuenta_principal",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_proyectos_1",
+            "unique": 1,
+            "origin": "u",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 1,
+                "name": "nombre"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "responsables_maestros",
+        "sql": "CREATE TABLE responsables_maestros (nombre TEXT PRIMARY KEY)",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_responsables_maestros_1",
+            "unique": 1,
+            "origin": "pk",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 0,
+                "name": "nombre"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "riesgos",
+        "sql": "CREATE TABLE riesgos (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                licitacion_id INTEGER NOT NULL,\n                descripcion TEXT NOT NULL,\n                categoria TEXT,\n                impacto INTEGER DEFAULT 1,\n                probabilidad INTEGER DEFAULT 1,\n                mitigacion TEXT,\n                FOREIGN KEY (licitacion_id) REFERENCES licitaciones (id) ON DELETE CASCADE\n            )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "descripcion",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "categoria",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 4,
+            "name": "impacto",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": "1",
+            "pk": 0
+          },
+          {
+            "cid": 5,
+            "name": "probabilidad",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": "1",
+            "pk": 0
+          },
+          {
+            "cid": 6,
+            "name": "mitigacion",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "descripcion",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "categoria",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 4,
+            "name": "impacto",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": "1",
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 5,
+            "name": "probabilidad",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": "1",
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 6,
+            "name": "mitigacion",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "table": "licitaciones",
+            "from": "licitacion_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          }
+        ],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "idx_riesgos_licitacion_id",
+            "unique": 0,
+            "origin": "c",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 1,
+                "name": "licitacion_id"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "subcategorias",
+        "sql": "CREATE TABLE subcategorias(id INTEGER PRIMARY KEY,nombre TEXT NOT NULL,categoria_id INTEGER NOT NULL,FOREIGN KEY(categoria_id)REFERENCES categorias(id)ON DELETE CASCADE,UNIQUE(nombre,categoria_id))",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "categoria_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "nombre",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "categoria_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "table": "categorias",
+            "from": "categoria_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          }
+        ],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_subcategorias_1",
+            "unique": 1,
+            "origin": "u",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 1,
+                "name": "nombre"
+              },
+              {
+                "seqno": 1,
+                "cid": 2,
+                "name": "categoria_id"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "subsanacion_historial",
+        "sql": "CREATE TABLE subsanacion_historial (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                licitacion_id INTEGER NOT NULL,\n                documento_id INTEGER NOT NULL,\n                fecha_solicitud TEXT NOT NULL,\n                fecha_limite_entrega TEXT,\n                fecha_entrega_real TEXT,\n                comentario TEXT,\n                estado TEXT DEFAULT 'Pendiente',\n                FOREIGN KEY (licitacion_id) REFERENCES licitaciones (id) ON DELETE CASCADE,\n                FOREIGN KEY (documento_id) REFERENCES documentos (id) ON DELETE CASCADE\n            )",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "documento_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "fecha_solicitud",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 4,
+            "name": "fecha_limite_entrega",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 5,
+            "name": "fecha_entrega_real",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 6,
+            "name": "comentario",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 7,
+            "name": "estado",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": "'Pendiente'",
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "licitacion_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "documento_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "fecha_solicitud",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 4,
+            "name": "fecha_limite_entrega",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 5,
+            "name": "fecha_entrega_real",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 6,
+            "name": "comentario",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 7,
+            "name": "estado",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": "'Pendiente'",
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "table": "documentos",
+            "from": "documento_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "table": "licitaciones",
+            "from": "licitacion_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          }
+        ],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "uniq_subsanacion_pendiente",
+            "unique": 1,
+            "origin": "c",
+            "partial": 1,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 1,
+                "name": "licitacion_id"
+              },
+              {
+                "seqno": 1,
+                "cid": 2,
+                "name": "documento_id"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      },
+      {
+        "name": "transacciones",
+        "sql": "CREATE TABLE transacciones(id TEXT PRIMARY KEY,proyecto_id INTEGER NOT NULL,cuenta_id INTEGER NOT NULL,categoria_id INTEGER NOT NULL,subcategoria_id INTEGER,tipo TEXT NOT NULL,descripcion TEXT NOT NULL,comentario TEXT,monto REAL NOT NULL,fecha DATE NOT NULL,FOREIGN KEY(proyecto_id)REFERENCES proyectos(id)ON DELETE CASCADE,FOREIGN KEY(cuenta_id)REFERENCES cuentas(id),FOREIGN KEY(categoria_id)REFERENCES categorias(id),FOREIGN KEY(subcategoria_id)REFERENCES subcategorias(id))",
+        "table_info": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1
+          },
+          {
+            "cid": 1,
+            "name": "proyecto_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 2,
+            "name": "cuenta_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 3,
+            "name": "categoria_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 4,
+            "name": "subcategoria_id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 5,
+            "name": "tipo",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 6,
+            "name": "descripcion",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 7,
+            "name": "comentario",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 8,
+            "name": "monto",
+            "type": "REAL",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          },
+          {
+            "cid": 9,
+            "name": "fecha",
+            "type": "DATE",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0
+          }
+        ],
+        "table_xinfo": [
+          {
+            "cid": 0,
+            "name": "id",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 1,
+            "hidden": 0
+          },
+          {
+            "cid": 1,
+            "name": "proyecto_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 2,
+            "name": "cuenta_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 3,
+            "name": "categoria_id",
+            "type": "INTEGER",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 4,
+            "name": "subcategoria_id",
+            "type": "INTEGER",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 5,
+            "name": "tipo",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 6,
+            "name": "descripcion",
+            "type": "TEXT",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 7,
+            "name": "comentario",
+            "type": "TEXT",
+            "notnull": 0,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 8,
+            "name": "monto",
+            "type": "REAL",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          },
+          {
+            "cid": 9,
+            "name": "fecha",
+            "type": "DATE",
+            "notnull": 1,
+            "dflt_value": null,
+            "pk": 0,
+            "hidden": 0
+          }
+        ],
+        "foreign_keys": [
+          {
+            "id": 0,
+            "seq": 0,
+            "table": "subcategorias",
+            "from": "subcategoria_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "NO ACTION",
+            "match": "NONE"
+          },
+          {
+            "id": 1,
+            "seq": 0,
+            "table": "categorias",
+            "from": "categoria_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "NO ACTION",
+            "match": "NONE"
+          },
+          {
+            "id": 2,
+            "seq": 0,
+            "table": "cuentas",
+            "from": "cuenta_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "NO ACTION",
+            "match": "NONE"
+          },
+          {
+            "id": 3,
+            "seq": 0,
+            "table": "proyectos",
+            "from": "proyecto_id",
+            "to": "id",
+            "on_update": "NO ACTION",
+            "on_delete": "CASCADE",
+            "match": "NONE"
+          }
+        ],
+        "indexes": [
+          {
+            "seq": 0,
+            "name": "sqlite_autoindex_transacciones_1",
+            "unique": 1,
+            "origin": "pk",
+            "partial": 0,
+            "columns": [
+              {
+                "seqno": 0,
+                "cid": 0,
+                "name": "id"
+              }
+            ]
+          }
+        ],
+        "triggers": []
+      }
+    ],
+    "views": []
+  }
+}
