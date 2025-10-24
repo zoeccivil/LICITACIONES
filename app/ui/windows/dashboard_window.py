@@ -1,363 +1,591 @@
 from __future__ import annotations
-from typing import List, Optional, Tuple
-import datetime
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QBrush, QColor
-from PyQt6.QtWidgets import (
-    QDialog,
-    QVBoxLayout,
-    QWidget,
-    QGroupBox,
-    QGridLayout,
-    QLineEdit,
-    QComboBox,
-    QPushButton,
-    QLabel,
-    QTreeWidget,
-    QTreeWidgetItem,
-    QHeaderView,
-    QHBoxLayout,
+
+from typing import Optional, Iterable
+from weakref import proxy
+
+from PyQt6.QtCore import (
+    Qt, QSortFilterProxyModel, QModelIndex, QRegularExpression, pyqtSignal, QTimer,
+    QItemSelection, QSettings, QByteArray, QUrl, QSize
 )
+from PyQt6.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QTabWidget, QTableView, QLabel, QLineEdit, QComboBox,
+    QPushButton, QHeaderView, QMenu, QGroupBox, QGridLayout, QSizePolicy
+)
+from PyQt6.QtGui import QGuiApplication, QCloseEvent, QDesktopServices
 
-from app.core.db_adapter import DatabaseAdapter
-from app.core.models import Licitacion
+from app.core.logic.status_engine import StatusEngine, DefaultStatusEngine, NextDeadline
+from app.ui.delegates.row_color_delegate import RowColorDelegate, ROW_BG_ROLE
+from app.ui.delegates.progress_bar_delegate import ProgressBarDelegate
+from app.ui.delegates.heatmap_delegate import HeatmapDelegate
+from app.ui.models.status_proxy_model import StatusFilterProxyModel
+from app.ui.models.licitaciones_table_model import LicitacionesTableModel
+from app.ui.windows.add_licitacion_window import AddLicitacionWindow
+# NO pongas dlg = AddLicitacionWindow() fuera de una función o clase
+
+ROLE_RECORD_ROLE = Qt.ItemDataRole.UserRole + 1002
+ESTADO_TEXT_ROLE = Qt.ItemDataRole.UserRole + 1003
+EMPRESA_TEXT_ROLE = Qt.ItemDataRole.UserRole + 1004
+LOTES_TEXT_ROLE = Qt.ItemDataRole.UserRole + 1005
+PROCESO_NUM_ROLE = Qt.ItemDataRole.UserRole + 1010
+CARPETA_PATH_ROLE = Qt.ItemDataRole.UserRole + 1011
+DOCS_PROGRESS_ROLE = Qt.ItemDataRole.UserRole + 1012
+DIFERENCIA_PCT_ROLE = Qt.ItemDataRole.UserRole + 1013
 
 
-class DashboardWindow(QDialog):
-    """
-    Dashboard General de Licitaciones (iteración 1):
-    - Grupos: Activas y Licitaciones Finalizadas (colapsable)
-    - Filtros: Buscar Proceso, Contiene Lote, Estado, Empresa, Limpiar
-    - Próximo Vencimiento: muestra el próximo hito de la licitación seleccionada
-    - Columnas: Código, Nombre Proceso, Empresa, Restan, % Docs, % Dif., Monto Ofertado, Estatus
+class DashboardWindow(QWidget):
+    countsChanged = pyqtSignal(int, int)
+    detailRequested = pyqtSignal(object)
 
-    NOTA:
-    - Las reglas de estado, colores y selección de “finalizada” están aproximadas y marcadas con TODO
-      para ajustarlas exactamente a tus reglas una vez nos compartas el detalle.
-    """
-
-    COL_COD = 0
-    COL_NOMBRE = 1
-    COL_EMPRESA = 2
-    COL_RESTAN = 3
-    COL_DOCS = 4
-    COL_DIFF = 5
-    COL_MONTO = 6
-    COL_STATUS = 7
-
-    def __init__(self, parent: QWidget, db: DatabaseAdapter):
+    def __init__(self, model, parent: QWidget | None = None, status_engine: Optional[StatusEngine] = None):
         super().__init__(parent)
-        self.setWindowTitle("Dashboard General")
-        self.resize(1200, 720)
-        self.db = db
+        self._model = model
+        self._status = status_engine or DefaultStatusEngine()
+
+        self._settings = QSettings("Zoeccivil", "Licitaciones")
+        self._settingsDebounce = QTimer(self)
+        self._settingsDebounce.setSingleShot(True)
+        self._settingsDebounce.setInterval(250)
+        self._settingsDebounce.timeout.connect(self._save_settings)
+
+        self._debounce = QTimer(self)
+        self._debounce.setSingleShot(True)
+        self._debounce.setInterval(220)
+
+        self._docs_col: Optional[int] = 4
+        self._dif_col: Optional[int] = 5
+        self._docs_role: Optional[int] = DOCS_PROGRESS_ROLE
+        self._dif_role: Optional[int] = DIFERENCIA_PCT_ROLE
 
         self._build_ui()
-        self._load_data()
+        self._setup_models()    # <-- IMPORTANTE: Asigna el modelo antes de conectar señales
+        self._wire()            # <-- Ahora sí puedes conectar señales de selección
 
-    # UI
+        self._populate_filter_values()
+        self._apply_filters_to_both()
+        self._update_tab_counts()
+
+        self._restore_settings()
+        self._setup_context_menus()
+
+    def abrir_nueva_licitacion(self):
+        dlg = AddLicitacionWindow(self)
+        dlg.exec()
+
+    def _wire(self):
+        # Conecta señales SOLO si selectionModel ya existe (después de setModel)
+        if self.tableActivas.selectionModel():
+            self.tableActivas.selectionModel().selectionChanged.connect(self._sync_right_panel_with_selection)
+        if self.tableFinalizadas.selectionModel():
+            self.tableFinalizadas.selectionModel().selectionChanged.connect(self._sync_right_panel_with_selection)
+        self.tabs.currentChanged.connect(self._sync_right_panel_with_selection)
+
     def _build_ui(self):
-        layout = QVBoxLayout(self)
+        root = QVBoxLayout(self)
+        root.setContentsMargins(8, 8, 8, 8)
+        root.setSpacing(8)
 
-        filters = QGroupBox("Filtros y Búsqueda", self)
-        g = QGridLayout(filters)
+        # Grupo Filtros y Próximo Vencimiento
+        self.filtersGroup = QGroupBox("Filtros y Búsqueda", self)
+        self.filtersGroup.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        fg_h = QHBoxLayout(self.filtersGroup)
+        fg_h.setContentsMargins(8, 8, 8, 8)
+        fg_h.setSpacing(12)
 
-        self.ed_search = QLineEdit(filters)
-        self.ed_search.setPlaceholderText("Buscar Proceso (número o nombre)")
-        self.ed_lote = QLineEdit(filters)
-        self.ed_lote.setPlaceholderText("Contiene Lote N°")
-        self.cb_estado = QComboBox(filters)
-        self.cb_estado.addItem("(Todos)")
-        # TODO: reemplazar por tu lista cerrada de estados
-        self.cb_estado.addItems(["Iniciada", "Sobre B Entregado", "Adjudicada", "Desierta", "Cancelada", "Fases cumplidas"])
-        self.cb_empresa = QComboBox(filters)
-        self.cb_empresa.setEditable(True)
-        self.cb_empresa.addItem("(Todas)")
+        # Filtros (zona izquierda)
+        filters_layout = QGridLayout()
+        filters_layout.setHorizontalSpacing(8)
+        filters_layout.setVerticalSpacing(4)
 
-        self.btn_clear = QPushButton("Limpiar Filtros", filters)
+        self.searchEdit = QLineEdit()
+        self.loteEdit = QLineEdit()
+        self.estadoCombo = QComboBox(); self.estadoCombo.addItem("Todos")
+        self.empresaCombo = QComboBox(); self.empresaCombo.addItem("Todas")
 
-        g.addWidget(QLabel("Buscar:"), 0, 0)
-        g.addWidget(self.ed_search, 0, 1)
-        g.addWidget(QLabel("Contiene Lote:"), 0, 2)
-        g.addWidget(self.ed_lote, 0, 3)
-        g.addWidget(QLabel("Estado:"), 1, 0)
-        g.addWidget(self.cb_estado, 1, 1)
-        g.addWidget(QLabel("Empresa:"), 1, 2)
-        g.addWidget(self.cb_empresa, 1, 3)
-        g.addWidget(self.btn_clear, 0, 4, 2, 1)
-        layout.addWidget(filters)
+        filters_layout.addWidget(QLabel("Buscar Proceso:"), 0, 0)
+        filters_layout.addWidget(self.searchEdit,           0, 1)
+        filters_layout.addWidget(QLabel("Contiene Lote:"),  0, 2)
+        filters_layout.addWidget(self.loteEdit,             0, 3)
+        filters_layout.addWidget(QLabel("Estado:"),         1, 0)
+        filters_layout.addWidget(self.estadoCombo,          1, 1)
+        filters_layout.addWidget(QLabel("Empresa:"),        1, 2)
+        filters_layout.addWidget(self.empresaCombo,         1, 3)
 
-        # Próximo vencimiento
-        next_box = QGroupBox("Próximo Vencimiento", self)
-        hb = QHBoxLayout(next_box)
-        self.lbl_next = QLabel("-- Selecciona una Fila --", next_box)
-        self.lbl_next.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.lbl_next.setStyleSheet("font-size: 18px; padding: 10px;")
-        hb.addWidget(self.lbl_next)
-        layout.addWidget(next_box)
+        self.searchEdit.setMinimumWidth(140)
+        self.loteEdit.setMinimumWidth(100)
+        self.estadoCombo.setMinimumWidth(110)
+        self.empresaCombo.setMinimumWidth(120)
 
-        # Tabla
-        self.tree = QTreeWidget(self)
-        self.tree.setColumnCount(8)
-        self.tree.setHeaderLabels(
-            ["Código", "Nombre Proceso", "Empresa", "Restan", "% Docs", "% Dif.", "Monto Ofertado", "Estatus"]
-        )
-        self.tree.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
-        self.tree.header().setStretchLastSection(True)
-        self.tree.setSortingEnabled(True)
-        layout.addWidget(self.tree)
+        # Botón Limpiar Filtros junto a los filtros
+        self.clearBtn = QPushButton("Limpiar Filtros")
+        self.clearBtn.setFixedWidth(110)
+        self.clearBtn.setFixedHeight(26)
+        filters_layout.addWidget(self.clearBtn, 0, 4, 2, 1, alignment=Qt.AlignmentFlag.AlignTop)
 
-        # Eventos
-        self.ed_search.textChanged.connect(self._apply_filters)
-        self.ed_lote.textChanged.connect(self._apply_filters)
-        self.cb_estado.currentTextChanged.connect(self._apply_filters)
-        self.cb_empresa.currentTextChanged.connect(self._apply_filters)
-        self.btn_clear.clicked.connect(self._clear_filters)
-        self.tree.itemSelectionChanged.connect(self._on_selection_changed)
+        fg_h.addLayout(filters_layout, 5)
 
-    # Data
-    def _load_data(self):
-        # Empresas maestras para combo
+        # Panel derecho: Próximo Vencimiento, ahora ocupa TODO el espacio
+        right = QVBoxLayout()
+        right.setSpacing(6)
+
+        self.nextDueTitle = QLabel("Próximo Vencimiento")
+        self.nextDueTitle.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+
+        self.nextDueArea = QLabel("-- Selecciona una Fila --")
+        self.nextDueArea.setWordWrap(True)
+        self.nextDueArea.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self.nextDueArea.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.nextDueArea.setTextFormat(Qt.TextFormat.RichText)
+        self.nextDueArea.setStyleSheet("""
+            background: #e3f2fd;
+            color: #263238;
+            padding: 16px;
+            border-radius: 7px;
+            font-size: 13px;        /* Más pequeño para que quepa más texto */
+            font-weight: 500;
+            /* No overflow ni ellipsis: que salga todo! */
+        """)
+        self.nextDueArea.setTextFormat(Qt.TextFormat.RichText)
+
+        right.addWidget(self.nextDueTitle, alignment=Qt.AlignmentFlag.AlignLeft)
+        right.addWidget(self.nextDueArea, 1)  # stretch = 1, ocupa todo el espacio vertical
+
+        fg_h.addLayout(right, 8)  # le damos MÁS espacio al panel derecho
+
+        root.addWidget(self.filtersGroup, 0)
+
+        # Tabs (listado)
+        self.tabs = QTabWidget()
+        self.tableActivas = QTableView()
+        self.tableFinalizadas = QTableView()
+        for tv in (self.tableActivas, self.tableFinalizadas):
+            tv.setAlternatingRowColors(True)
+            tv.setSortingEnabled(True)
+            tv.horizontalHeader().setStretchLastSection(True)
+            tv.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+            tv.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+            tv.setItemDelegate(RowColorDelegate(tv))
+            tv.setIconSize(QSize(16, 16))
+        self.tabs.addTab(self.tableActivas, "Licitaciones Activas (0)")
+        self.tabs.addTab(self.tableFinalizadas, "Licitaciones Finalizadas (0)")
+        root.addWidget(self.tabs, 1)
+
+        # KPIs
+        kpi_bar = QHBoxLayout()
+        self.kpiScope = QLabel("Activas: 0")
+        self.kpiGanadas = QLabel("Ganadas: 0")
+        self.kpiLotesGanados = QLabel("Lotes Ganados: 0")
+        self.kpiPerdidas = QLabel("Perdidas: 0")
+        for w in (self.kpiScope, self.kpiGanadas, self.kpiLotesGanados, self.kpiPerdidas):
+            kpi_bar.addWidget(w)
+        kpi_bar.addStretch(1)
+        root.addLayout(kpi_bar)
+
+        self.filtersGroup.setMaximumHeight(self.filtersGroup.sizeHint().height() + 6)
+
+    def _setup_models(self):
+        # Asume que self._model es tu LicitacionesTableModel
+        from app.ui.models.status_proxy_model import StatusFilterProxyModel
+
+        self._proxyActivas = StatusFilterProxyModel(show_finalizadas=False, status_engine=self._status)
+        self._proxyActivas.setSourceModel(self._model)
+        self.tableActivas.setModel(self._proxyActivas)
+
+        self._proxyFinalizadas = StatusFilterProxyModel(show_finalizadas=True, status_engine=self._status)
+        self._proxyFinalizadas.setSourceModel(self._model)
+        self.tableFinalizadas.setModel(self._proxyFinalizadas)
+
+        # Forzar nombre del encabezado "Estatus" (col 7) por si el estilo/strech lo oculta
         try:
-            empresas = self.db.list_empresas_maestras()
+            self._proxyActivas.setHeaderData(7, Qt.Orientation.Horizontal, "Estatus")
+            self._proxyFinalizadas.setHeaderData(7, Qt.Orientation.Horizontal, "Estatus")
         except Exception:
-            empresas = []
-        for e in empresas:
-            self.cb_empresa.addItem(e)
+            pass
 
-        # Cargar licitaciones (resumen) y luego detalles por cada una para calcular métricas
-        try:
-            resumen = self.db.list_licitaciones()
-        except Exception:
-            resumen = []
+        for tv in (self.tableActivas, self.tableFinalizadas):
+            try:
+                tv.hideColumn(8)  # Lotes
+            except Exception:
+                pass
+            # Asegurar que el header muestre el texto
+            hh = tv.horizontalHeader()
+            try:
+                hh.setHighlightSections(False)
+                hh.setDefaultAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+                hh.setMinimumSectionSize(60)
+            except Exception:
+                pass
+            # Ancho inicial amigable para "Estatus"
+            try:
+                tv.setColumnWidth(7, 140)
+            except Exception:
+                pass
 
-        # Guardamos en memoria una lista de modelos completos para filtrar en memoria
-        self._licitaciones: List[Licitacion] = []
-        for r in resumen:
-            lic = self.db.load_licitacion_by_id(int(r.id))  # type: ignore[arg-type]
-            if lic:
-                self._licitaciones.append(lic)
+        # Delegates
+        self.apply_delegates(docs_col=4, dif_col=5,
+                            docs_role=DOCS_PROGRESS_ROLE, dif_role=DIFERENCIA_PCT_ROLE,
+                            heat_neg_range=30.0, heat_pos_range=30.0, heat_alpha=90, heat_invert=False)
 
-        self._populate_tree()
+        # Orden inicial
+        self.tableActivas.sortByColumn(0, Qt.SortOrder.AscendingOrder)
+        self.tableFinalizadas.sortByColumn(0, Qt.SortOrder.AscendingOrder)
 
-    def _populate_tree(self):
-        self.tree.clear()
+        # Selección para panel derecho
+        # ¡IMPORTANTE! Siempre conecta la señal después de setModel
+        self.tableActivas.selectionModel().selectionChanged.connect(self._on_selection_changed)
+        self.tableFinalizadas.selectionModel().selectionChanged.connect(self._on_selection_changed)
 
-        # Raíces
-        root_activas = QTreeWidgetItem(self.tree, ["Licitaciones Activas"])
-        root_final = QTreeWidgetItem(self.tree, ["Licitaciones Finalizadas"])
-        root_activas.setFirstColumnSpanned(True)
-        root_final.setFirstColumnSpanned(True)
-        root_final.setExpanded(False)  # colapsada por defecto
+        # Persist widths y sort
+        self.tableActivas.horizontalHeader().sectionResized.connect(lambda *_: self._schedule_save_settings())
+        self.tableFinalizadas.horizontalHeader().sectionResized.connect(lambda *_: self._schedule_save_settings())
+        self.tableActivas.horizontalHeader().sortIndicatorChanged.connect(lambda *_: self._schedule_save_settings())
+        self.tableFinalizadas.horizontalHeader().sortIndicatorChanged.connect(lambda *_: self._schedule_save_settings())
+        
+    def _populate_filter_values(self):
+        estados = set()
+        empresas = set()
+        model = self._model
+        for r in range(model.rowCount()):
+            estados.add(str(model.index(r, 7).data(Qt.ItemDataRole.DisplayRole) or "").strip())
+            empresas.add(str(model.index(r, 2).data(Qt.ItemDataRole.DisplayRole) or "").strip())
 
-        activas_count = 0
-        final_count = 0
+        cur_e = self.estadoCombo.currentText()
+        cur_emp = self.empresaCombo.currentText()
 
-        for lic in self._licitaciones:
-            is_final, status_text = self._is_finalizada_y_estado(lic)
-            restan_text, restan_days = self._restan_text(lic)
-            pct_docs = self._pct_docs(lic)
-            pct_diff = self._pct_diff(lic)
-            monto = self._monto_total(lic)
-            empresa = ", ".join(e.nombre for e in lic.empresas_nuestras) or (lic.institucion or "")
+        self.estadoCombo.blockSignals(True); self.empresaCombo.blockSignals(True)
+        self.estadoCombo.clear(); self.estadoCombo.addItem("Todos")
+        for e in sorted(e for e in estados if e): self.estadoCombo.addItem(e)
+        self.empresaCombo.clear(); self.empresaCombo.addItem("Todas")
+        for e in sorted(e for e in empresas if e): self.empresaCombo.addItem(e)
+        if cur_e and cur_e in [self.estadoCombo.itemText(i) for i in range(self.estadoCombo.count())]:
+            self.estadoCombo.setCurrentText(cur_e)
+        if cur_emp and cur_emp in [self.empresaCombo.itemText(i) for i in range(self.empresaCombo.count())]:
+            self.empresaCombo.setCurrentText(cur_emp)
+        self.estadoCombo.blockSignals(False); self.empresaCombo.blockSignals(False)
 
-            row = [
-                lic.numero_proceso or "",
-                lic.nombre_proceso or "",
-                empresa,
-                restan_text,
-                f"{pct_docs:.1f}%",
-                f"{pct_diff:+.2f}%",
-                f"RD$ {monto:,.2f}",
-                status_text,
-            ]
+    def _apply_filters_to_both(self):
+        text = self.searchEdit.text().strip()
+        estado_sel = self.estadoCombo.currentText()
+        empresa_sel = self.empresaCombo.currentText()
+        lote_txt = self.loteEdit.text()
 
-            it = QTreeWidgetItem(row)
-            it.setData(0, Qt.ItemDataRole.UserRole, lic)
+        estados = {estado_sel} if estado_sel and estado_sel.lower() != "todos" else None
+        empresas = {empresa_sel} if empresa_sel and empresa_sel.lower() != "todas" else None
 
-            # Colorear según estado aproximado
-            self._apply_row_color(it, status_text, is_final)
+        for proxy in (self._proxyActivas, self._proxyFinalizadas):
+            proxy.set_search_text(text)
+            proxy.set_filter_estado(estados)
+            proxy.set_filter_empresa(empresas)
+            proxy.set_filter_lote_contains(lote_txt)
 
-            if is_final:
-                root_final.addChild(it)
-                final_count += 1
-            else:
-                root_activas.addChild(it)
-                activas_count += 1
+        self._update_row_colors()
+        self._update_tab_counts()
+        self._update_kpis_for_current_tab()
 
-        root_final.setText(0, f"Licitaciones Finalizadas ({final_count})")
-        self.tree.addTopLevelItem(root_activas)
-        self.tree.addTopLevelItem(root_final)
-        self.tree.expandItem(root_activas)
+    def _update_row_colors(self):
+        model = self._model
+        for r in range(model.rowCount()):
+            idx0 = model.index(r, 0)
+            lic = idx0.data(ROLE_RECORD_ROLE)
+            if lic is None:
+                continue
+            _, color = self._status.estatus_y_color(lic)
+            model.setData(idx0, color, ROW_BG_ROLE)
 
-    # Filtros
-    def _apply_filters(self):
-        search = self.ed_search.text().strip().lower()
-        lote_contains = self.ed_lote.text().strip()
-        estado = self.cb_estado.currentText().strip()
-        empresa_sel = self.cb_empresa.currentText().strip()
+    def _update_tab_counts(self):
+        act = self._proxyActivas.rowCount()
+        fin = self._proxyFinalizadas.rowCount()
+        self.tabs.setTabText(0, f"Licitaciones Activas ({act})")
+        self.tabs.setTabText(1, f"Licitaciones Finalizadas ({fin})")
+        self.countsChanged.emit(act, fin)
 
-        def matches(lic: Licitacion) -> bool:
-            # Buscar Proceso: numero_proceso o nombre_proceso
-            if search:
-                hay = (search in (lic.numero_proceso or "").lower()) or (search in (lic.nombre_proceso or "").lower())
-                if not hay:
-                    return False
+    def _visible_licitaciones(self, proxy) -> Iterable:
+        for r in range(proxy.rowCount()):
+            idx_proxy = proxy.index(r, 0)
+            idx_src = proxy.mapToSource(idx_proxy)
+            lic = idx_src.siblingAtColumn(0).data(ROLE_RECORD_ROLE)
+            print("\n=== DEBUG LICITACION ===")
+            print("Objeto licitación:", lic)
+            print("Atributos:", dir(lic))
+            print("Nombre:", getattr(lic, "nombre_proceso", None) or getattr(lic, "nombre", None))
+            cronograma = getattr(lic, "cronograma", None)
+            print("Cronograma:", cronograma)
+            print("========================\n")
+            if lic is not None:
+                yield lic
 
-            # Contiene Lote
-            if lote_contains:
-                if not any((l.numero or "") == lote_contains for l in lic.lotes or []):
-                    return False
+    def _update_kpis_for_current_tab(self):
+        proxy = self._proxyActivas if self.tabs.currentIndex() == 0 else self._proxyFinalizadas
+        visibles = list(self._visible_licitaciones(proxy))
+        total = len(visibles)
+        ganadas, perdidas, lotes_ganados = self._status.kpis(visibles)
 
-            # Estado (aproximado)
-            is_final, status_text = self._is_finalizada_y_estado(lic)
-            if estado and estado != "(Todos)":
-                if status_text != estado:
-                    return False
-
-            # Empresa
-            if empresa_sel and empresa_sel != "(Todas)":
-                if not any(e.nombre == empresa_sel for e in (lic.empresas_nuestras or [])):
-                    return False
-
-            return True
-
-        self._licitaciones_filtradas = list(filter(matches, self._licitaciones))
-        # Actualizar árbol con filtradas
-        lic_backup = self._licitaciones
-        self._licitaciones = self._licitaciones_filtradas
-        self._populate_tree()
-        self._licitaciones = lic_backup  # restaurar referencia original para futuras filtraciones
+        self.kpiScope.setText(("Activas" if self.tabs.currentIndex() == 0 else "Finalizadas") + f": {total}")
+        self.kpiGanadas.setText(f"Ganadas: {ganadas}")
+        self.kpiLotesGanados.setText(f"Lotes Ganados: {lotes_ganados}")
+        self.kpiPerdidas.setText(f"Perdidas: {perdidas}")
 
     def _clear_filters(self):
-        self.ed_search.clear()
-        self.ed_lote.clear()
-        self.cb_estado.setCurrentIndex(0)
-        self.cb_empresa.setCurrentIndex(0)
+        self.searchEdit.clear()
+        self.estadoCombo.setCurrentIndex(0)
+        self.empresaCombo.setCurrentIndex(0)
+        self.loteEdit.clear()
+        self._apply_filters_to_both()
 
-    # Selection
-    def _on_selection_changed(self):
-        items = self.tree.selectedItems()
-        if not items:
-            self._set_next_label("-- Selecciona una Fila --", color="#777")
+    def _on_tab_changed(self, index: int):
+        self._update_kpis_for_current_tab()
+        self._sync_right_panel_with_selection()
+        self._schedule_save_settings()
+
+    def _on_selection_changed(self, selected, deselected):
+        print(">>>> Cambió la selección")
+        self._sync_right_panel_with_selection()
+
+    def _sync_right_panel_with_selection(self):
+        view = self.tableActivas if self.tabs.currentIndex() == 0 else self.tableFinalizadas
+        if not view.selectionModel():
+            self.nextDueArea.setText("-- Selecciona una Fila --")
+            print("NO selectionModel")
             return
-        it = items[0]
-        # Omitir nodos raíz
-        if it.childCount() >= 0 and it.data(0, Qt.ItemDataRole.UserRole) is None:
-            if it.childCount() > 0:
-                self._set_next_label("-- Selecciona una Fila --", color="#777")
+
+        sel = view.selectionModel().selectedRows()
+        if not sel:
+            # Intenta con el índice actual si no hay seleccionados
+            idx = view.currentIndex()
+            if not idx.isValid():
+                self.nextDueArea.setText("-- Selecciona una Fila --")
+                print("NO row selected y currentIndex inválido")
                 return
-        lic: Licitacion = it.data(0, Qt.ItemDataRole.UserRole)  # type: ignore
-        text, _, color = self._next_deadline_info(lic)
-        self._set_next_label(text, color=color)
-
-    def _set_next_label(self, text: str, color: str = "#444"):
-        self.lbl_next.setText(text)
-        self.lbl_next.setStyleSheet(f"font-size: 18px; padding: 10px; background-color: #222; color: {color};")
-
-    # Helpers de cálculo (aproximados, para ajustar con tus reglas)
-    def _is_finalizada_y_estado(self, lic: Licitacion) -> Tuple[bool, str]:
-        # TODO: Reemplazar por reglas exactas
-        if getattr(lic, "adjudicada", False) and (lic.adjudicada_a or "").strip():
-            # Si adjudicada a nosotros o a terceros:
-            es_nuestro = any(e.nombre.strip() == (lic.adjudicada_a or "").strip() for e in lic.empresas_nuestras)
-            return True, "Adjudicada" if es_nuestro else "Perdida"
-        if (lic.motivo_descalificacion or "").strip():
-            return True, "Descalificada"
-        # Estado textual si lo trae
-        estado = (lic.estado or "").strip() or "Iniciada"
-        # Heurística: considerar finalizada si el estado textual es Cancelada/Desierta
-        if estado in ("Cancelada", "Desierta"):
-            return True, estado
-        return False, estado
-
-    def _next_deadline_info(self, lic: Licitacion) -> Tuple[str, int, str]:
-        """
-        Devuelve: (texto, días_restantes, color_hex)
-        Regla aproximada: primer hito futuro en cronograma; si ninguno, 'Fases cumplidas'.
-        """
-        cron = lic.cronograma or {}
-        # TODO: reemplazar por tus claves exactas y orden de prioridad
-        keys_order = [
-            "apertura_ofertas",
-            "presentacion_sobre_b",
-            "notificacion_adjudicacion",
-            "adjudicacion",
-        ]
-        today = datetime.date.today()
-        futuros: List[Tuple[str, int]] = []
-        for k in keys_order:
-            v = cron.get(k)
-            if not v:
-                continue
-            try:
-                d = datetime.date.fromisoformat(str(v))
-            except Exception:
-                # Aceptar formatos comunes YYYY-MM-DD HH:MM:SS
-                try:
-                    d = datetime.datetime.fromisoformat(str(v)).date()
-                except Exception:
-                    continue
-            delta = (d - today).days
-            if delta >= 0:
-                futuros.append((k, delta))
-
-        if futuros:
-            k, days = sorted(futuros, key=lambda x: x[1])[0]
-            label = {
-                "apertura_ofertas": "Apertura de Ofertas",
-                "presentacion_sobre_b": "Presentación de Sobre B",
-                "notificacion_adjudicacion": "Notificación de Adjudicación",
-                "adjudicacion": "Adjudicación",
-            }.get(k, k)
-            if days == 0:
-                return f"Hoy: {label}", 0, "#00D1B2"
-            elif days == 1:
-                return f"Falta 1 día para: {label}", days, "#E6A700"
-            else:
-                return f"Faltan {days} días para: {label}", days, "#E6A700"
-
-        # Sin futuros: ver si todo cumplido o vencido
-        return "Fases cumplidas", -1, "#8F8F8F"
-
-    def _restan_text(self, lic: Licitacion) -> Tuple[str, int]:
-        text, days, _ = self._next_deadline_info(lic)
-        return text, days
-
-    def _pct_docs(self, lic: Licitacion) -> float:
-        try:
-            return float(lic.get_porcentaje_completado())
-        except Exception:
-            return 0.0
-
-    def _pct_diff(self, lic: Licitacion) -> float:
-        try:
-            return float(lic.get_diferencia_porcentual(solo_participados=False, usar_base_personal=True))
-        except Exception:
-            return 0.0
-
-    def _monto_total(self, lic: Licitacion) -> float:
-        try:
-            return float(lic.get_oferta_total(solo_participados=False))
-        except Exception:
-            return 0.0
-
-    def _apply_row_color(self, it: QTreeWidgetItem, status: str, is_final: bool):
-        """
-        Colorea filas con reglas básicas. Sustituir por tu paleta:
-        - Adjudicada (a nosotros): verde
-        - Perdida/Descalificada/Cancelada/Desierta: rojo tenue
-        - Iniciada/Sobre B Entregado/etc.: amarillo suave
-        """
-        status_l = (status or "").strip().lower()
-        if "adjudicada" in status_l:
-            color = QColor("#0E8A3A")
-            fg = QColor("#FFFFFF")
-        elif any(x in status_l for x in ("perdida", "descalificada", "cancelada", "desierta")):
-            color = QColor("#A94442")
-            fg = QColor("#FFFFFF")
+            print("NO row selected pero hay currentIndex")
         else:
-            color = QColor("#F3E7B1")
-            fg = QColor("#333333")
-        for col in range(self.tree.columnCount()):
-            it.setBackground(col, QBrush(color))
-            it.setForeground(col, QBrush(fg))
+            idx = sel[0]
+
+        model = view.model()
+        if hasattr(model, "mapToSource"):
+            src_idx = model.mapToSource(idx)
+        else:
+            src_idx = idx
+
+        lic = src_idx.siblingAtColumn(0).data(ROLE_RECORD_ROLE)
+        if lic is None:
+            self.nextDueArea.setText("-- Selecciona una Fila --")
+            print("NO lic found")
+            return
+
+        # ... (resto igual)
+
+        # DEPURACIÓN
+        print("\n=== DEBUG LICITACION ===")
+        print("Objeto licitación:", lic)
+        print("Atributos:", dir(lic))
+        print("Nombre:", getattr(lic, "nombre_proceso", None) or getattr(lic, "nombre", None))
+        cronograma = getattr(lic, "cronograma", None)
+        print("Cronograma:", cronograma)
+        print("========================\n")
+
+        import datetime
+        hoy = datetime.date.today()
+        cronograma = cronograma or {}
+
+        eventos_futuros = []
+        for k, v in cronograma.items():
+            print(f"Clave: {k}, Valor: {v}")
+            if not isinstance(v, dict):
+                print("No es dict")
+                continue
+            fecha_str = v.get("fecha_limite")
+            estado = (v.get("estado") or "").strip().lower()
+            print(f"  fecha_str: {fecha_str}, estado: {estado}")
+            if not fecha_str or "pendiente" not in estado:
+                print("Salta por falta de fecha o estado no pendiente")
+                continue
+            for fmt in ("%Y-%m-%d", "%d/%m/%Y"):
+                try:
+                    fecha = datetime.datetime.strptime(str(fecha_str).strip()[:10], fmt).date()
+                    eventos_futuros.append((fecha, k, fecha_str))
+                    print(f"  Agrega evento: {fecha}, {k}, {fecha_str}")
+                    break
+                except Exception as e:
+                    print(f"    Error al parsear fecha: {e}")
+                    continue
+
+        print("eventos_futuros:", eventos_futuros)
+
+        if eventos_futuros:
+            eventos_futuros.sort(key=lambda x: x[0])
+            fecha, nombre_hito, fecha_str = eventos_futuros[0]
+            diferencia = (fecha - hoy).days
+            lic_nombre = getattr(lic, "nombre_proceso", None) or getattr(lic, "nombre", None) or ""
+            if diferencia < 0:
+                texto = (
+                    f'<b>{lic_nombre}</b><br>'
+                    f'<span style="color:#C62828;font-weight:bold">'
+                    f'Vencida hace {abs(diferencia)} día{"s" if abs(diferencia)!=1 else ""} para: {nombre_hito}'
+                    f'</span>'
+                )
+            elif diferencia == 0:
+                texto = (
+                    f'<b>{lic_nombre}</b><br>'
+                    f'<span style="color:#F9A825;font-weight:bold">'
+                    f'¡Hoy! para: {nombre_hito}'
+                    f'</span>'
+                )
+            else:
+                color = "#FBC02D" if diferencia <= 7 else "#42A5F5" if diferencia <= 30 else "#2E7D32"
+                texto = (
+                    f'<b>{lic_nombre}</b><br>'
+                    f'<span style="color:{color};font-weight:bold">'
+                    f'Faltan {diferencia} días para: {nombre_hito}'
+                    f'</span>'
+                )
+                self.nextDueArea.setText(texto)
+
+            print("TEXTO FINAL A MOSTRAR EN PANEL:", texto)
+            self.nextDueArea.setText(texto)
+            return
+
+        print("NO hay eventos futuros válidos")
+        self.nextDueArea.setText("<b>Sin cronograma</b>")        
+        # ---------- Menú contextual ----------
+
+    def _setup_context_menus(self):
+        for tv in (self.tableActivas, self.tableFinalizadas):
+            tv.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+            tv.customContextMenuRequested.connect(lambda pos, view=tv: self._on_custom_context_menu(view, pos))
+
+    def _on_custom_context_menu(self, view: QTableView, pos):
+        idx = view.indexAt(pos)
+        menu = QMenu(view)
+        if not idx.isValid():
+            menu.addAction("No hay elemento").setEnabled(False)
+            menu.exec(view.viewport().mapToGlobal(pos))
+            return
+
+        proxy = view.model()
+        src_idx = proxy.mapToSource(idx.siblingAtColumn(0))
+        lic = src_idx.data(ROLE_RECORD_ROLE)
+        proceso = src_idx.data(PROCESO_NUM_ROLE) or src_idx.data(Qt.ItemDataRole.DisplayRole)
+        carpeta = src_idx.data(CARPETA_PATH_ROLE)
+
+        def _emit_open():
+            self.detailRequested.emit(lic if lic is not None else proceso)
+
+        def _copy_num():
+            QGuiApplication.clipboard().setText(str(proceso or ""))
+
+        def _open_folder():
+            if carpeta:
+                QDesktopServices.openUrl(QUrl.fromLocalFile(str(carpeta)))
+
+        menu.addAction("Abrir detalle", _emit_open)
+        menu.addSeparator()
+        menu.addAction("Copiar número de proceso", _copy_num)
+        menu.addAction("Abrir carpeta del proceso", _open_folder)
+        menu.exec(view.viewport().mapToGlobal(pos))
+
+    # ---------- Delegates ----------
+    def apply_delegates(self, docs_col: Optional[int] = None, dif_col: Optional[int] = None,
+                        docs_role: Optional[int] = DOCS_PROGRESS_ROLE, dif_role: Optional[int] = DIFERENCIA_PCT_ROLE,
+                        heat_neg_range: float = 30.0, heat_pos_range: float = 30.0, heat_alpha: int = 90, heat_invert: bool = False):
+        self._docs_col, self._dif_col = docs_col, dif_col
+        self._docs_role, self._dif_role = docs_role, dif_role
+
+        for tv in (self.tableActivas, self.tableFinalizadas):
+            if docs_col is not None:
+                tv.setItemDelegateForColumn(docs_col, ProgressBarDelegate(tv, value_role=docs_role))
+            if dif_col is not None:
+                tv.setItemDelegateForColumn(dif_col, HeatmapDelegate(tv, value_role=dif_role,
+                                                                    neg_range=heat_neg_range, pos_range=heat_pos_range,
+                                                                    alpha=heat_alpha, invert=heat_invert))
+
+    # ---------- Persistencia ----------
+    def _settings_key(self, sub: str) -> str:
+        return f"Dashboard/{sub}"
+
+    def _schedule_save_settings(self):
+        self._settingsDebounce.start()
+
+    def _save_table_prefs(self, key_prefix: str, table: QTableView):
+        header = table.horizontalHeader()
+        if header is None:
+            return
+        cols = header.count()
+        widths = [header.sectionSize(i) for i in range(cols)]
+        sort_col = header.sortIndicatorSection()
+        sort_order_enum = header.sortIndicatorOrder()
+        try:
+            sort_ord = int(sort_order_enum)
+        except TypeError:
+            sort_ord = int(getattr(sort_order_enum, "value", 0))
+
+        self._settings.setValue(self._settings_key(f"{key_prefix}/widths"), widths)
+        self._settings.setValue(self._settings_key(f"{key_prefix}/sort_col"), int(sort_col))
+        self._settings.setValue(self._settings_key(f"{key_prefix}/sort_ord"), int(sort_ord))
+
+    def _restore_table_prefs(self, key_prefix: str, table: QTableView):
+        header = table.horizontalHeader()
+        if header is None:
+            return
+
+        widths = self._settings.value(self._settings_key(f"{key_prefix}/widths"))
+        if isinstance(widths, list):
+            for i, w in enumerate(widths):
+                try:
+                    table.setColumnWidth(i, int(w))
+                except Exception:
+                    pass
+
+        sort_col = self._settings.value(self._settings_key(f"{key_prefix}/sort_col"))
+        sort_ord = self._settings.value(self._settings_key(f"{key_prefix}/sort_ord"))
+
+        def _to_int(v, default=0):
+            try:
+                if isinstance(v, (int, float)):
+                    return int(v)
+                if isinstance(v, str) and v.strip():
+                    return int(v)
+            except Exception:
+                pass
+            return default
+
+        if sort_col is not None and sort_ord is not None:
+            col = _to_int(sort_col, 0)
+            ord_int = _to_int(sort_ord, 0)
+            try:
+                ord_enum = Qt.SortOrder(ord_int)
+            except Exception:
+                ord_enum = Qt.SortOrder.AscendingOrder
+            try:
+                table.sortByColumn(col, ord_enum)
+            except Exception:
+                pass
+
+    def _save_settings(self):
+        self._settings.setValue(self._settings_key("geometry"), self.saveGeometry())
+        self._settings.setValue(self._settings_key("tab"), self.tabs.currentIndex())
+
+        self._save_table_prefs("tableActivas", self.tableActivas)
+        self._save_table_prefs("tableFinalizadas", self.tableFinalizadas)
+
+    def _restore_settings(self):
+        geom = self._settings.value(self._settings_key("geometry"))
+        if isinstance(geom, QByteArray):
+            try:
+                self.restoreGeometry(geom)
+            except Exception:
+                pass
+        tab = self._settings.value(self._settings_key("tab"))
+        if tab is not None:
+            try:
+                self.tabs.setCurrentIndex(int(tab))
+            except Exception:
+                pass
+
+        self._restore_table_prefs("tableActivas", self.tableActivas)
+        self._restore_table_prefs("tableFinalizadas", self.tableFinalizadas)
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        try:
+            self._save_settings()
+        finally:
+            super().closeEvent(event)
+

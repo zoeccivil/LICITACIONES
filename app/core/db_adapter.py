@@ -1,12 +1,20 @@
 from __future__ import annotations
 
-import datetime
-import json
 import os
-import sqlite3
-from typing import Any, Dict, List, Optional
+import shutil
+import datetime as _dt
+from typing import Any, Dict, List, Optional, Tuple
 
+# Modelos de tu app (mantener estos imports)
 from .models import Documento, Empresa, Licitacion, Lote, Oferente
+
+# Intentamos importar tu DatabaseManager legado (glicitaciones2.py/db_manager.py)
+try:
+    # Caso común: db_manager.py está en la raíz del proyecto
+    from db_manager import DatabaseManager  # type: ignore
+except Exception:
+    # Alternativa por si lo moviste dentro del paquete
+    from app.core.db_manager import DatabaseManager  # type: ignore
 
 
 def _to_bool(v: Any) -> bool:
@@ -20,393 +28,297 @@ def _to_bool(v: Any) -> bool:
         return str(v).strip().lower() in ("true", "t", "yes", "y", "1")
 
 
-def _now_iso() -> str:
-    return datetime.datetime.now().isoformat(timespec="seconds")
+def _to_float(v: Any, default: float = 0.0) -> float:
+    try:
+        return float(v if v is not None else default)
+    except Exception:
+        return default
 
 
 class DatabaseAdapter:
     """
-    Adaptador para la base LICITACIONES_GENERALES.db (esquema normalizado).
+    Adaptador usado por la UI PyQt6 que envuelve tu DatabaseManager legado.
+    - Provee métodos esperados por la UI actual (open, close, load_all_licitaciones, load_licitacion_by_id,
+      load_licitacion_by_numero, save_licitacion, etc.).
+    - Mapea los dicts devueltos por DatabaseManager.get_all_data() a instancias de tus modelos
+      Licitacion/Lote/Documento/Oferente/Empresa para que el Dashboard pueda calcular %Docs, %Dif., etc.
     """
 
     def __init__(self, db_path: Optional[str] = None) -> None:
-        self.db_path = db_path
-        self.conn: Optional[sqlite3.Connection] = None
+        self.db_path: Optional[str] = db_path
+        self.mgr: Optional[DatabaseManager] = None
+
+    # Compatibilidad con código que lee self.path
+    @property
+    def path(self) -> Optional[str]:
+        return self.db_path
 
     @property
     def schema(self) -> str:
+        # Conservamos este valor porque la UI lo muestra en la barra de estado
         return "normalized"
 
+    # ----------------------------
+    # Ciclo de vida
+    # ----------------------------
     def open(self, db_path: Optional[str] = None) -> None:
         self.db_path = db_path or self.db_path
         if not self.db_path:
             raise ValueError("No se especificó la ruta de la base de datos.")
-        dirn = os.path.dirname(self.db_path)
-        if dirn:
-            os.makedirs(dirn, exist_ok=True)
+        os.makedirs(os.path.dirname(self.db_path) or ".", exist_ok=True)
 
-        self.conn = sqlite3.connect(self.db_path)
-        self.conn.row_factory = sqlite3.Row
-        self.conn.execute("PRAGMA foreign_keys = ON")
+        # Instancia y asegura esquema (DatabaseManager ya lo hace en __init__)
+        self.mgr = DatabaseManager(self.db_path)
+        # Opcional: timeout para locks
+        try:
+            self.mgr.set_busy_timeout(8)
+        except Exception:
+            pass
 
     def close(self) -> None:
-        if self.conn:
+        if self.mgr:
             try:
-                self.conn.close()
+                self.mgr.close()
             finally:
-                self.conn = None
+                self.mgr = None
+
+    @staticmethod
+    def create_new_db(path: str) -> None:
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        mgr = DatabaseManager(path)
+        mgr.close()
 
     # ----------------------------
-    # Lectura principal
+    # Lectura
     # ----------------------------
-    def list_licitaciones(self) -> List[Licitacion]:
-        if not self.conn:
+    def load_all_licitaciones(self) -> List[Licitacion]:
+        """
+        Carga TODAS las licitaciones con sus relaciones (similar al Tk).
+        Se apoya en DatabaseManager.get_all_data() y mapea a objetos de modelo.
+        """
+        if not self.mgr:
             raise RuntimeError("DB no abierta.")
-        cur = self.conn.cursor()
-        cur.execute(
-            """
-            SELECT
-                id, numero_proceso, nombre_proceso, institucion, estado, fecha_creacion, last_modified
-            FROM licitaciones
-            ORDER BY COALESCE(last_modified, '') DESC, id DESC
-            """
-        )
-        res: List[Licitacion] = []
-        for r in cur.fetchall():
-            res.append(
-                Licitacion(
-                    id=r["id"],
-                    numero_proceso=r["numero_proceso"] or "",
-                    nombre_proceso=r["nombre_proceso"] or "",
-                    institucion=r["institucion"] or "",
-                    estado=r["estado"] or "Iniciada",
-                    fecha_creacion=r["fecha_creacion"] or str(datetime.date.today()),
-                )
-            )
-        return res
+        data = self.mgr.get_all_data()  # [licitaciones], empresas_maestras, instituciones_maestras, ...
+        raw_list = data[0] if data else []
+        return [self._map_licitacion_dict_to_model(d) for d in raw_list]
+
+    def list_licitaciones(self) -> List[Licitacion]:
+        """
+        Alias por compatibilidad; devuelve lo mismo que load_all_licitaciones.
+        """
+        return self.load_all_licitaciones()
 
     def load_licitacion_by_id(self, lic_id: int) -> Optional[Licitacion]:
-        if not self.conn:
+        if not self.mgr:
             raise RuntimeError("DB no abierta.")
-        cur = self.conn.cursor()
+        licitaciones = self.load_all_licitaciones()
+        for lic in licitaciones:
+            if int(getattr(lic, "id", 0) or 0) == int(lic_id):
+                return lic
+        return None
 
-        cur.execute("SELECT * FROM licitaciones WHERE id = ?", (lic_id,))
-        row = cur.fetchone()
-        if not row:
-            return None
+    def get_licitacion_by_id(self, lic_id: int):
+        """Compatibilidad: alias de load_licitacion_by_id para la UI."""
+        return self.load_licitacion_by_id(lic_id)
 
-        lic = Licitacion(
-            id=row["id"],
-            nombre_proceso=row["nombre_proceso"] or "",
-            numero_proceso=row["numero_proceso"] or "",
-            institucion=row["institucion"] or "",
-            estado=row["estado"] or "Iniciada",
-            fase_A_superada=_to_bool(row["fase_A_superada"]) if "fase_A_superada" in row.keys() else False,
-            fase_B_superada=_to_bool(row["fase_B_superada"]) if "fase_B_superada" in row.keys() else False,
-            adjudicada=_to_bool(row["adjudicada"]) if "adjudicada" in row.keys() else False,
-            adjudicada_a=row["adjudicada_a"] or "" if "adjudicada_a" in row.keys() else "",
-            motivo_descalificacion=row["motivo_descalificacion"] or "" if "motivo_descalificacion" in row.keys() else "",
-            docs_completos_manual=_to_bool(row["docs_completos_manual"]) if "docs_completos_manual" in row.keys() else False,
-            last_modified=row["last_modified"] if "last_modified" in row.keys() else None,
-            fecha_creacion=row["fecha_creacion"] or str(datetime.date.today()),
-        )
-
-        # JSON de licitaciones
-        try:
-            lic.cronograma = json.loads(row["cronograma"] or "{}") if "cronograma" in row.keys() else {}
-        except Exception:
-            lic.cronograma = {}
-        try:
-            lic._parametros_evaluacion = json.loads(row["parametros_evaluacion"] or "{}") if "parametros_evaluacion" in row.keys() else {}
-        except Exception:
-            lic._parametros_evaluacion = {}
-
-        # Empresas nuestras
-        cur.execute(
-            "SELECT empresa_nombre FROM licitacion_empresas_nuestras WHERE licitacion_id = ? ORDER BY id ASC",
-            (lic_id,),
-        )
-        empresas = [Empresa(r["empresa_nombre"]) for r in cur.fetchall()]
-        lic.empresas_nuestras = empresas
-
-        # Lotes
-        cur.execute(
-            """
-            SELECT id, numero, nombre, monto_base, monto_base_personal, monto_ofertado,
-                   participamos, fase_A_superada, ganador_oferente, empresa_nuestra
-            FROM lotes
-            WHERE licitacion_id = ?
-            ORDER BY id ASC
-            """,
-            (lic_id,),
-        )
-        lotes: List[Lote] = []
-        for r in cur.fetchall():
-            l = Lote(
-                id=r["id"],
-                numero=str(r["numero"] or ""),
-                nombre=r["nombre"] or "",
-                monto_base=float(r["monto_base"] or 0.0),
-                monto_base_personal=float(r["monto_base_personal"] or 0.0),
-                monto_ofertado=float(r["monto_ofertado"] or 0.0),
-                participamos=_to_bool(r["participamos"]),
-                fase_A_superada=_to_bool(r["fase_A_superada"]),
-                ganador_nombre=r["ganador_oferente"] or "",
-                empresa_nuestra=r["empresa_nuestra"] or None,
-            )
-            l.ganado_por_nosotros = l.empresa_nuestra is not None and (l.ganador_nombre or "").strip() == (l.empresa_nuestra or "").strip()
-            lotes.append(l)
-        lic.lotes = lotes
-
-        # Oferentes y sus ofertas
-        cur.execute(
-            "SELECT id, nombre, comentario FROM oferentes WHERE licitacion_id = ? ORDER BY id ASC",
-            (lic_id,),
-        )
-        oferentes: List[Oferente] = []
-        for r in cur.fetchall():
-            of = Oferente(nombre=r["nombre"] or "", comentario=r["comentario"] or "", ofertas_por_lote=[])
-            # Ofertas del oferente
-            cur2 = self.conn.cursor()
-            cur2.execute(
-                """
-                SELECT lote_numero, monto, paso_fase_A, plazo_entrega, garantia_meses
-                FROM ofertas_lote_oferentes
-                WHERE oferente_id = ?
-                ORDER BY id ASC
-                """,
-                (r["id"],),
-            )
-            ofertas = []
-            for ro in cur2.fetchall():
-                ofertas.append(
-                    {
-                        "lote_numero": str(ro["lote_numero"] or ""),
-                        "monto": float(ro["monto"] or 0.0),
-                        "paso_fase_A": _to_bool(ro["paso_fase_A"]),
-                        "plazo_entrega": int(ro["plazo_entrega"] or 0),
-                        "garantia_meses": int(ro["garantia_meses"] or 0),
-                    }
-                )
-            of.ofertas_por_lote = ofertas
-            oferentes.append(of)
-        lic.oferentes_participantes = oferentes
-
-        # Documentos
-        cur.execute(
-            """
-            SELECT id, codigo, nombre, categoria, comentario, presentado, subsanable, ruta_archivo,
-                   responsable, revisado, obligatorio, orden_pliego, requiere_subsanacion
-            FROM documentos
-            WHERE licitacion_id = ?
-            ORDER BY COALESCE(orden_pliego, 999999), id ASC
-            """,
-            (lic_id,),
-        )
-        documentos: List[Documento] = []
-        for r in cur.fetchall():
-            documentos.append(
-                Documento(
-                    id=r["id"],
-                    codigo=r["codigo"] or "",
-                    nombre=r["nombre"] or "",
-                    categoria=r["categoria"] or "",
-                    comentario=r["comentario"] or "",
-                    presentado=_to_bool(r["presentado"]),
-                    subsanable=r["subsanable"] or "Subsanable",
-                    ruta_archivo=r["ruta_archivo"] or "",
-                    empresa_nombre=None,
-                    responsable=r["responsable"] or "Sin Asignar",
-                    revisado=_to_bool(r["revisado"]),
-                    obligatorio=_to_bool(r["obligatorio"]),
-                    orden_pliego=int(r["orden_pliego"]) if r["orden_pliego"] is not None else None,
-                    requiere_subsanacion=_to_bool(r["requiere_subsanacion"]),
-                )
-            )
-        lic.documentos_solicitados = documentos
-
-        return lic
+    def load_licitacion_by_numero(self, numero: str) -> Optional[Licitacion]:
+        if not self.mgr:
+            raise RuntimeError("DB no abierta.")
+        num_norm = (numero or "").strip().lower()
+        for lic in self.load_all_licitaciones():
+            n = (getattr(lic, "numero_proceso", "") or "").strip().lower()
+            if n == num_norm:
+                return lic
+        return None
 
     # ----------------------------
     # Escritura
     # ----------------------------
     def save_licitacion(self, licitacion: Licitacion) -> int:
-        if not self.conn:
+        """
+        Persiste la licitación usando DatabaseManager.save_licitacion(licitacion).
+        Tu modelo Licitacion debe implementar to_dict() (ya lo hace en tu base).
+        """
+        if not self.mgr:
             raise RuntimeError("DB no abierta.")
-        cur = self.conn.cursor()
-
-        empresa_principal = (licitacion.empresas_nuestras[0].nombre if licitacion.empresas_nuestras else None)
-
-        if licitacion.id is None:
-            cur.execute(
-                """
-                INSERT INTO licitaciones (
-                    nombre_proceso, numero_proceso, institucion, empresa_nuestra, estado,
-                    fase_A_superada, fase_B_superada, adjudicada, adjudicada_a,
-                    motivo_descalificacion, fecha_creacion, cronograma, docs_completos_manual,
-                    bnb_score, last_modified, parametros_evaluacion
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    licitacion.nombre_proceso,
-                    licitacion.numero_proceso,
-                    licitacion.institucion,
-                    empresa_principal,
-                    licitacion.estado,
-                    int(_to_bool(licitacion.fase_A_superada)),
-                    int(_to_bool(licitacion.fase_B_superada)),
-                    int(_to_bool(licitacion.adjudicada)),
-                    licitacion.adjudicada_a,
-                    licitacion.motivo_descalificacion,
-                    str(licitacion.fecha_creacion),
-                    json.dumps(licitacion.cronograma or {}, ensure_ascii=False),
-                    int(_to_bool(licitacion.docs_completos_manual)),
-                    float(getattr(licitacion, "bnb_score", -1.0) or -1.0),
-                    _now_iso(),
-                    json.dumps(licitacion.parametros_evaluacion or {}, ensure_ascii=False),
-                ),
-            )
-            lic_id = int(cur.lastrowid)
-        else:
-            lic_id = int(licitacion.id)
-            cur.execute(
-                """
-                UPDATE licitaciones SET
-                    nombre_proceso = ?, numero_proceso = ?, institucion = ?, empresa_nuestra = ?, estado = ?,
-                    fase_A_superada = ?, fase_B_superada = ?, adjudicada = ?, adjudicada_a = ?,
-                    motivo_descalificacion = ?, fecha_creacion = ?, cronograma = ?, docs_completos_manual = ?,
-                    bnb_score = ?, last_modified = ?, parametros_evaluacion = ?
-                WHERE id = ?
-                """,
-                (
-                    licitacion.nombre_proceso,
-                    licitacion.numero_proceso,
-                    licitacion.institucion,
-                    empresa_principal,
-                    licitacion.estado,
-                    int(_to_bool(licitacion.fase_A_superada)),
-                    int(_to_bool(licitacion.fase_B_superada)),
-                    int(_to_bool(licitacion.adjudicada)),
-                    licitacion.adjudicada_a,
-                    licitacion.motivo_descalificacion,
-                    str(licitacion.fecha_creacion),
-                    json.dumps(licitacion.cronograma or {}, ensure_ascii=False),
-                    int(_to_bool(licitacion.docs_completos_manual)),
-                    float(getattr(licitacion, "bnb_score", -1.0) or -1.0),
-                    _now_iso(),
-                    json.dumps(licitacion.parametros_evaluacion or {}, ensure_ascii=False),
-                    lic_id,
-                ),
-            )
-
-        # Empresas nuestras
-        cur.execute("DELETE FROM licitacion_empresas_nuestras WHERE licitacion_id = ?", (lic_id,))
-        for e in licitacion.empresas_nuestras or []:
-            cur.execute(
-                "INSERT OR IGNORE INTO licitacion_empresas_nuestras (licitacion_id, empresa_nombre) VALUES (?, ?)",
-                (lic_id, e.nombre),
-            )
-
-        # Lotes
-        cur.execute("DELETE FROM lotes WHERE licitacion_id = ?", (lic_id,))
-        for l in licitacion.lotes or []:
-            cur.execute(
-                """
-                INSERT INTO lotes (
-                    licitacion_id, numero, nombre, monto_base, monto_base_personal, monto_ofertado,
-                    participamos, fase_A_superada, ganador_oferente, empresa_nuestra
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    lic_id,
-                    str(l.numero or ""),
-                    l.nombre or "",
-                    float(l.monto_base or 0.0),
-                    float(getattr(l, "monto_base_personal", 0.0) or 0.0),
-                    float(l.monto_ofertado or 0.0),
-                    int(_to_bool(getattr(l, "participamos", True))),
-                    int(_to_bool(getattr(l, "fase_A_superada", True))),
-                    getattr(l, "ganador_nombre", "") or "",
-                    l.empresa_nuestra or None,
-                ),
-            )
-
-        # Oferentes (ofertas se borran en cascada)
-        cur.execute("DELETE FROM oferentes WHERE licitacion_id = ?", (lic_id,))
-        for o in licitacion.oferentes_participantes or []:
-            cur.execute(
-                "INSERT INTO oferentes (licitacion_id, nombre, comentario) VALUES (?, ?, ?)",
-                (lic_id, o.nombre or "", o.comentario or ""),
-            )
-            oferente_id = int(cur.lastrowid)
-            for of in o.ofertas_por_lote or []:
-                cur.execute(
-                    """
-                    INSERT INTO ofertas_lote_oferentes
-                        (oferente_id, lote_numero, monto, paso_fase_A, plazo_entrega, garantia_meses)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        oferente_id,
-                        str(of.get("lote_numero") or ""),
-                        float(of.get("monto") or 0.0),
-                        int(_to_bool(of.get("paso_fase_A"))),
-                        int(of.get("plazo_entrega") or 0),
-                        int(of.get("garantia_meses") or 0),
-                    ),
-                )
-
-        # Documentos
-        cur.execute("DELETE FROM documentos WHERE licitacion_id = ?", (lic_id,))
-        for d in licitacion.documentos_solicitados or []:
-            cur.execute(
-                """
-                INSERT INTO documentos (
-                    licitacion_id, codigo, nombre, categoria, comentario, presentado, subsanable, ruta_archivo,
-                    responsable, revisado, obligatorio, orden_pliego, requiere_subsanacion
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    lic_id,
-                    d.codigo or "",
-                    d.nombre or "",
-                    d.categoria or "",
-                    d.comentario or "",
-                    int(_to_bool(d.presentado)),
-                    d.subsanable or "Subsanable",
-                    d.ruta_archivo or "",
-                    d.responsable or "Sin Asignar",
-                    int(_to_bool(d.revisado)),
-                    int(_to_bool(d.obligatorio)),
-                    int(d.orden_pliego) if d.orden_pliego is not None else None,
-                    int(_to_bool(getattr(d, "requiere_subsanacion", False))),
-                ),
-            )
-
-        self.conn.commit()
-        return lic_id
+        ok = self.mgr.save_licitacion(licitacion)
+        if not ok:
+            raise RuntimeError("No se pudo guardar la licitación (save_licitacion retornó False).")
+        return int(getattr(licitacion, "id", 0) or 0)
 
     # ----------------------------
-    # Helpers de “maestros”
+    # Utilitarios
     # ----------------------------
-    def _list_single_col(self, sql: str) -> List[str]:
-        if not self.conn:
+    def create_backup(self, dst_path: str) -> None:
+        if not self.db_path or not os.path.exists(self.db_path):
+            raise FileNotFoundError(self.db_path or "")
+        os.makedirs(os.path.dirname(dst_path) or ".", exist_ok=True)
+        shutil.copy2(self.db_path, dst_path)
+
+    def search_global(self, term: str) -> List[Dict[str, Any]]:
+        if not self.mgr:
             return []
         try:
-            cur = self.conn.cursor()
-            cur.execute(sql)
-            return [r[0] for r in cur.fetchall() if r[0] is not None]
+            return self.mgr.search_global(term)
         except Exception:
             return []
 
-    def list_responsables_maestros(self) -> List[str]:
-        return self._list_single_col("SELECT nombre FROM responsables_maestros ORDER BY nombre ASC")
+    def get_setting(self, clave: str, default: Optional[str] = None) -> Optional[str]:
+        if not self.mgr:
+            return default
+        try:
+            return self.mgr.get_setting(clave, default)
+        except Exception:
+            return default
 
-    def list_empresas_maestras(self) -> List[str]:
-        return self._list_single_col("SELECT nombre FROM empresas_maestras ORDER BY nombre ASC")
+    def set_setting(self, clave: str, valor: str) -> None:
+        if not self.mgr:
+            return
+        try:
+            self.mgr.set_setting(clave, valor)
+        except Exception:
+            pass
 
-    def list_categorias(self) -> List[str]:
-        return self._list_single_col("SELECT nombre FROM categorias ORDER BY nombre ASC")
+    # Opcionales (pueden ser útiles luego en la UI)
+    def run_sanity_checks(self) -> Dict[str, Any]:
+        if not self.mgr:
+            return {}
+        try:
+            return self.mgr.run_sanity_checks()
+        except Exception:
+            return {}
 
-    def list_instituciones_maestras(self) -> List[str]:
-        return self._list_single_col("SELECT nombre FROM instituciones_maestras ORDER BY nombre ASC")
+    def auto_repair(self, issues: Dict[str, Any]) -> Tuple[bool, str]:
+        if not self.mgr:
+            return False, "DB no abierta."
+        try:
+            return self.mgr.auto_repair(issues)
+        except Exception as e:
+            return False, str(e)
+
+    # ----------------------------
+    # Mapeadores Dict -> Modelos
+    # ----------------------------
+    def _map_licitacion_dict_to_model(self, d: Dict[str, Any]) -> Licitacion:
+        """
+        Construye una instancia de Licitacion (tu modelo) a partir del dict de DatabaseManager.get_all_data().
+        Incluye lotes, documentos, oferentes y empresas_nuestras.
+        """
+        # Cabecera
+        lic = Licitacion(
+            id=d.get("id"),
+            nombre_proceso=d.get("nombre_proceso") or d.get("nombre") or "",
+            numero_proceso=d.get("numero_proceso") or d.get("numero") or "",
+            institucion=d.get("institucion") or "",
+            estado=d.get("estado") or d.get("estatus") or "Iniciada",
+            fase_A_superada=_to_bool(d.get("fase_A_superada")),
+            fase_B_superada=_to_bool(d.get("fase_B_superada")),
+            adjudicada=_to_bool(d.get("adjudicada")),
+            adjudicada_a=d.get("adjudicada_a") or "",
+            motivo_descalificacion=d.get("motivo_descalificacion") or "",
+            fecha_creacion=d.get("fecha_creacion") or str(_dt.date.today()),
+            empresas_nuestras=[],  # se setea abajo
+        )
+
+        # Cronograma y parámetros evaluación
+        lic.cronograma = d.get("cronograma") or {}
+        try:
+            # Algunos dumps ya vienen como dict; si fuera str JSON, intentar parsear
+            if isinstance(lic.cronograma, str):
+                import json
+                lic.cronograma = json.loads(lic.cronograma or "{}")
+        except Exception:
+            lic.cronograma = {}
+
+        try:
+            params = d.get("parametros_evaluacion", {})
+            if isinstance(params, str):
+                import json
+                params = json.loads(params or "{}")
+            # Algunos modelos usan un setter .parametros_evaluacion; si no existe, mantener _parametros_evaluacion
+            if hasattr(lic, "parametros_evaluacion"):
+                setattr(lic, "parametros_evaluacion", params)
+            else:
+                setattr(lic, "_parametros_evaluacion", params)
+        except Exception:
+            pass
+
+        # Empresas nuestras
+        en_list = d.get("empresas_nuestras") or []
+        lic.empresas_nuestras = [Empresa(e["nombre"]) if isinstance(e, dict) else Empresa(str(e)) for e in en_list]
+
+        # Lotes
+        lic.lotes = [self._map_lote_dict_to_model(l) for l in (d.get("lotes") or [])]
+
+        # Oferentes
+        lic.oferentes_participantes = [self._map_oferente_dict_to_model(o) for o in (d.get("oferentes_participantes") or [])]
+
+        # Documentos
+        lic.documentos_solicitados = [self._map_documento_dict_to_model(doc) for doc in (d.get("documentos_solicitados") or [])]
+
+        # Enriquecimiento: bandera ganada (si adjudicada_a coincide o hay lotes ganados_por_nosotros)
+        try:
+            emp_set = {e.nombre.strip().lower() for e in lic.empresas_nuestras}
+            ganada_por_empresa = _to_bool(lic.adjudicada) and (lic.adjudicada_a or "").strip().lower() in emp_set if lic.adjudicada_a else False
+            ganada_por_lote = any(getattr(l, "ganado_por_nosotros", False) for l in lic.lotes)
+            setattr(lic, "ganada", bool(ganada_por_empresa or ganada_por_lote))
+        except Exception:
+            pass
+
+        # last_modified si viene
+        if "last_modified" in d:
+            setattr(lic, "last_modified", d.get("last_modified"))
+
+        return lic
+
+    def _map_lote_dict_to_model(self, l: Dict[str, Any]) -> Lote:
+        return Lote(
+            id=l.get("id"),
+            numero=str(l.get("numero") or ""),
+            nombre=l.get("nombre") or "",
+            monto_base=_to_float(l.get("monto_base"), 0.0),
+            monto_base_personal=_to_float(l.get("monto_base_personal"), 0.0),
+            monto_ofertado=_to_float(l.get("monto_ofertado"), 0.0),
+            participamos=_to_bool(l.get("participamos")),
+            fase_A_superada=_to_bool(l.get("fase_A_superada")),
+            ganador_nombre=l.get("ganador_nombre") or "",
+            empresa_nuestra=l.get("empresa_nuestra") or None,
+            ganado_por_nosotros=_to_bool(l.get("ganado_por_nosotros")),
+        )
+
+    def _map_documento_dict_to_model(self, d: Dict[str, Any]) -> Documento:
+        return Documento(
+            id=d.get("id"),
+            codigo=d.get("codigo") or "",
+            nombre=d.get("nombre") or "",
+            categoria=d.get("categoria") or "",
+            comentario=d.get("comentario") or "",
+            presentado=_to_bool(d.get("presentado")),
+            subsanable=d.get("subsanable") or "Subsanable",
+            ruta_archivo=d.get("ruta_archivo") or "",
+            empresa_nombre=None,  # no se usa aquí
+            responsable=d.get("responsable") or "Sin Asignar",
+            revisado=_to_bool(d.get("revisado")),
+            obligatorio=_to_bool(d.get("obligatorio")),
+            orden_pliego=int(d.get("orden_pliego")) if d.get("orden_pliego") is not None else None,
+            requiere_subsanacion=_to_bool(d.get("requiere_subsanacion")),
+        )
+
+    def _map_oferente_dict_to_model(self, o: Dict[str, Any]) -> Oferente:
+        of = Oferente(nombre=o.get("nombre") or "", comentario=o.get("comentario") or "", ofertas_por_lote=[])
+        offers = []
+        for it in (o.get("ofertas_por_lote") or []):
+            offers.append(
+                {
+                    "lote_numero": str(it.get("lote_numero") or ""),
+                    "monto": _to_float(it.get("monto"), 0.0),
+                    "paso_fase_A": _to_bool(it.get("paso_fase_A")),
+                    "plazo_entrega": int(it.get("plazo_entrega") or 0),
+                    "garantia_meses": int(it.get("garantia_meses") or 0),
+                    # el flag 'ganador' lo hidrata db_manager para algunos casos; si existe, lo pasamos
+                    **({"ganador": _to_bool(it.get("ganador"))} if "ganador" in it else {}),
+                }
+            )
+        of.ofertas_por_lote = offers
+        return of
+
